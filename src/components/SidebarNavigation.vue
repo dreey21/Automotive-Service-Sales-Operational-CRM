@@ -37,7 +37,7 @@
             <!-- Icon - always left-aligned with same padding -->
             <div 
               class="flex-shrink-0 transition-colors w-5 h-5"
-              :class="isActive(tab.path) ? 'text-red-500' : 'text-gray-500 hover:text-gray-400'"
+              :class="isActive(tab.path) ? 'text-[var(--accent)]' : 'text-gray-500 hover:text-gray-400'"
             >
               <component :is="getIcon(tab.icon)" class="w-full h-full" />
             </div>
@@ -50,7 +50,7 @@
             <!-- Subtle active indicator -->
             <div 
               v-if="isActive(tab.path) && !isCollapsed"
-              class="w-1.5 h-1.5 rounded-full bg-red-500 ml-auto"
+              class="w-1.5 h-1.5 rounded-full bg-[var(--accent)] ml-auto"
             />
           </RouterLink>
         </li>

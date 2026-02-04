@@ -151,7 +151,7 @@
                       v-if="getSelectedCount(replaceJobs) > 0"
                       type="button"
                       @click.stop="confirmClearSection(replaceJobs, 'Replace')"
-                      class="text-xs text-[var(--muted-foreground)] hover:text-red-500 underline transition-colors"
+                      class="text-xs text-red-500 hover:text-red-400 underline transition-colors"
                     >
                       Clear
                     </button>
@@ -252,7 +252,7 @@
                       v-if="getSelectedCount(pulldownJobs) > 0"
                       type="button"
                       @click.stop="confirmClearSection(pulldownJobs, 'Pulldown')"
-                      class="text-xs text-[var(--muted-foreground)] hover:text-red-500 underline transition-colors"
+                      class="text-xs text-red-500 hover:text-red-400 underline transition-colors"
                     >
                       Clear
                     </button>
@@ -304,7 +304,7 @@
                     v-if="getSelectedCount(otherJobs) > 0"
                     type="button"
                     @click="confirmClearSection(otherJobs, 'Other Services')"
-                    class="text-xs text-[var(--muted-foreground)] hover:text-red-500 underline transition-colors"
+                    class="text-xs text-red-500 hover:text-red-400 underline transition-colors"
                   >
                     Clear
                   </button>

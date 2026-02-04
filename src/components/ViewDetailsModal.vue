@@ -47,54 +47,57 @@
 
       <!-- Recent Service History Component -->
       <RecentServiceHistory
-        v-if="service.plate_number && jobHistory.length > 1"
+        v-if="currentService.plate_number && jobHistory.length > 1"
         :jobs="jobHistory"
-        :current-job-id="service.id"
+        :current-job-id="currentService.id"
         @select-job="viewJob"
         @view-all="showFullHistory = true"
       />
 
       <!-- Scrollable Content -->
       <div class="flex-1 overflow-y-auto hide-scrollbar">
-        <div class="p-4 md:p-6 max-w-5xl space-y-5">
+        <!-- MOBILE LAYOUT (default) -->
+        <div class="md:hidden p-4 space-y-5">
           
           <!-- PRIMARY INFO SECTION -->
           <div class="space-y-5">
-            <!-- Plate Number -->
-            <div v-if="service.plate_number" class="flex items-center justify-between">
-              <div class="flex items-center gap-2.5">
-                <svg class="w-5 h-5 text-[var(--muted-foreground)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-                <div>
-                  <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Plate Number</p>
-                  <p class="text-xl font-bold text-[var(--foreground)] tracking-tight">{{ service.plate_number }}</p>
+            <!-- Plate Number with Warranty Badge -->
+            <div v-if="currentService.plate_number">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                  <svg class="w-5 h-5 text-[var(--muted-foreground)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <div>
+                    <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Plate Number</p>
+                    <p class="text-xl font-bold text-[var(--foreground)] tracking-tight">{{ currentService.plate_number }}</p>
+                  </div>
                 </div>
+                <!-- Warranty status badge -->
+                <span 
+                  v-if="warrantyStatus"
+                  :class="[
+                    'px-3 py-1.5 text-xs font-bold uppercase tracking-wide flex-shrink-0',
+                    warrantyStatus === 'active' 
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                      : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  ]"
+                  style="border-radius: 6px;"
+                >
+                  {{ warrantyStatus === 'active' ? 'In Warranty' : 'Out of Warranty' }}
+                </span>
               </div>
-              <!-- Warranty status badge -->
-              <span 
-                v-if="warrantyStatus"
-                :class="[
-                  'px-3 py-1.5 text-xs font-bold uppercase tracking-wide',
-                  warrantyStatus === 'active' 
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                    : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                ]"
-                style="border-radius: 6px;"
-              >
-                {{ warrantyStatus === 'active' ? 'In Warranty' : 'Out of Warranty' }}
-              </span>
             </div>
 
-            <!-- Service Type & Date -->
+            <!-- Invoice & Date -->
             <div class="grid grid-cols-2 gap-3">
-              <div class="flex items-start gap-2.5">
+              <div v-if="currentService.invoice" class="flex items-start gap-2.5">
                 <svg class="w-5 h-5 text-[var(--muted-foreground)] flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <div>
-                  <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Service</p>
-                  <p class="text-base font-semibold text-[var(--foreground)] leading-tight">{{ service.service_type || 'N/A' }}</p>
+                  <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Invoice</p>
+                  <p class="text-base font-semibold text-[var(--foreground)] leading-tight">#{{ currentService.invoice }}</p>
                 </div>
               </div>
               
@@ -104,7 +107,7 @@
                 </svg>
                 <div>
                   <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Date</p>
-                  <p class="text-base font-semibold text-[var(--foreground)] leading-tight">{{ formatDate(service.service_date) }}</p>
+                  <p class="text-base font-semibold text-[var(--foreground)] leading-tight">{{ formatDate(currentService.service_date) }}</p>
                 </div>
               </div>
             </div>
@@ -116,7 +119,7 @@
               </svg>
               <div>
                 <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Cost</p>
-                <p class="text-lg font-base text-green-500 tabular-nums">₱{{ service.cost?.toFixed(2) || '0.00' }}</p>
+                <p class="text-2xl font-extrabold text-blue-300 tabular-nums">₱{{ currentService.cost?.toFixed(2) || '0.00' }}</p>
               </div>
             </div>
           </div>
@@ -124,8 +127,63 @@
           <!-- Divider -->
           <div class="border-t border-[var(--border)]"></div>
 
+          <!-- JOBS DONE SECTION -->
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <svg class="w-4 h-4 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              <h4 class="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                Jobs Done
+              </h4>
+            </div>
+            
+            <div v-if="currentService.jobs_done && currentService.jobs_done.length > 0" class="space-y-2">
+              <div 
+                v-for="job in currentService.jobs_done" 
+                :key="job"
+                class="flex items-start justify-between gap-3 p-3 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors"
+                style="border-radius: 6px;"
+              >
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-[var(--foreground)] mb-1">
+                    {{ getJobLabel(job) }}
+                  </p>
+                  <div v-if="getJobPartDetails(job)" class="flex flex-wrap gap-1.5">
+                    <span 
+                      v-if="getJobPartDetails(job).condition"
+                      :class="[
+                        'text-[10px] px-2 py-0.5 rounded font-medium',
+                        getJobPartDetails(job).condition === 'brand_new' 
+                          ? 'bg-green-500/20 text-green-400' 
+                          : 'bg-yellow-500/20 text-yellow-400'
+                      ]"
+                    >
+                      {{ getJobPartDetails(job).condition === 'brand_new' ? 'Brand New' : 'Surplus' }}
+                    </span>
+                    <span 
+                      v-if="getJobPartDetails(job).isOwnerPart"
+                      class="text-[10px] px-2 py-0.5 rounded font-medium bg-purple-500/20 text-purple-400"
+                    >
+                      Owner's Part
+                    </span>
+                  </div>
+                </div>
+                <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <div v-else class="p-4 text-center text-sm text-[var(--muted-foreground)] bg-[var(--muted)]/30 border border-[var(--border)]" style="border-radius: 6px;">
+              No jobs recorded
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-[var(--border)]"></div>
+
           <!-- Notes Section -->
-          <div v-if="service.description">
+          <div v-if="currentService.description">
             <div class="flex items-center gap-2 mb-2.5">
               <svg class="w-4 h-4 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -135,7 +193,7 @@
               </h4>
             </div>
             <div class="p-3.5 bg-[var(--muted)]/30 border border-[var(--border)]" style="border-radius: 8px;">
-              <p class="text-[15px] text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">{{ service.description }}</p>
+              <p class="text-[15px] text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">{{ currentService.description }}</p>
             </div>
           </div>
 
@@ -154,19 +212,19 @@
                   <svg class="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <p class="text-sm font-medium text-[var(--foreground)]">{{ service.customer_name || 'N/A' }}</p>
+                  <p class="text-sm font-medium text-[var(--foreground)]">{{ currentService.customer_name || 'Walk-in Customer' }}</p>
                 </div>
-                <div v-if="service.phone" class="flex items-center gap-2.5">
+                <div v-if="currentService.phone" class="flex items-center gap-2.5">
                   <svg class="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  <p class="text-sm text-[var(--foreground)]">{{ service.phone }}</p>
+                  <p class="text-sm text-[var(--foreground)]">{{ currentService.phone }}</p>
                 </div>
               </div>
             </div>
 
             <!-- Vehicle Section -->
-            <div v-if="service.car_model || service.car_year">
+            <div v-if="currentService.car_model || currentService.car_year">
               <h4 class="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide mb-2.5">
                 Vehicle
               </h4>
@@ -175,22 +233,209 @@
                   <path stroke-linecap="round" stroke-linejoin="round" d="M3 13l1-3h16l1 3M5 16h14a2 2 0 002-2v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2zm2 4a1 1 0 110-2 1 1 0 010 2zm10 0a1 1 0 110-2 1 1 0 010 2z" />
                 </svg>
                 <p class="text-sm text-[var(--foreground)]">
-                  {{ service.car_model || 'N/A' }}
-                  <span v-if="service.car_year" class="text-[var(--muted-foreground)]"> ({{ service.car_year }})</span>
+                  {{ currentService.car_model || 'N/A' }}
+                  <span v-if="currentService.car_year" class="text-[var(--muted-foreground)]"> ({{ currentService.car_year }})</span>
                 </p>
               </div>
             </div>
           </div>
 
           <!-- Metadata -->
-          <div v-if="service.created_at" class="pt-3 border-t border-[var(--border)]">
+          <div v-if="currentService.created_at" class="pt-3 border-t border-[var(--border)]">
             <p class="text-xs text-[var(--muted-foreground)] text-center">
-              Record created {{ formatDate(service.created_at) }}
+              Record created {{ formatDate(currentService.created_at) }}
             </p>
           </div>
 
           <!-- Bottom padding -->
           <div class="h-4"></div>
+        </div>
+
+        <!-- DESKTOP LAYOUT -->
+        <div class="hidden md:block p-6 max-w-6xl mx-auto">
+          <!-- Top Section with Plate Number and Warranty -->
+          <div class="flex items-start justify-between mb-6">
+            <div v-if="currentService.plate_number" class="flex items-center gap-3">
+              <svg class="w-6 h-6 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <div>
+                <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide mb-1">Plate Number</p>
+                <p class="text-2xl font-bold text-[var(--foreground)]">{{ currentService.plate_number }}</p>
+              </div>
+            </div>
+            
+            <!-- Warranty Badge -->
+            <span 
+              v-if="warrantyStatus"
+              :class="[
+                'px-4 py-2 text-sm font-bold uppercase tracking-wide',
+                warrantyStatus === 'active' 
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
+              ]"
+              style="border-radius: 8px;"
+            >
+              {{ warrantyStatus === 'active' ? 'In Warranty' : 'Out of Warranty' }}
+            </span>
+          </div>
+
+          <!-- Info Cards Grid -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <!-- Invoice Card -->
+            <div v-if="currentService.invoice" class="p-4 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 8px;">
+              <div class="flex items-center gap-3 mb-2">
+                <svg class="w-5 h-5 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-xs text-[var(--muted-foreground)] font-semibold uppercase tracking-wide">Invoice</p>
+              </div>
+              <p class="text-xl font-bold text-[var(--foreground)]">#{{ currentService.invoice }}</p>
+            </div>
+
+            <!-- Date Card -->
+            <div class="p-4 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 8px;">
+              <div class="flex items-center gap-3 mb-2">
+                <svg class="w-5 h-5 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p class="text-xs text-[var(--muted-foreground)] font-semibold uppercase tracking-wide">Service Date</p>
+              </div>
+              <p class="text-xl font-bold text-[var(--foreground)]">{{ formatDate(currentService.service_date) }}</p>
+            </div>
+
+            <!-- Cost Card -->
+            <div class="p-4 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 8px;">
+              <div class="flex items-center gap-3 mb-2">
+                <svg class="w-5 h-5 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-xs text-[var(--muted-foreground)] font-semibold uppercase tracking-wide">Total Cost</p>
+              </div>
+              <p class="text-2xl font-bold text-blue-300 tabular-nums">₱{{ currentService.cost?.toFixed(2) || '0.00' }}</p>
+            </div>
+          </div>
+
+          <!-- Two Column Layout -->
+          <div class="grid grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-6">
+              <!-- Jobs Done Section -->
+              <div>
+                <div class="flex items-center gap-2 mb-4">
+                  <svg class="w-5 h-5 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  <h3 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wide">Jobs Done</h3>
+                </div>
+                
+                <div v-if="currentService.jobs_done && currentService.jobs_done.length > 0" class="space-y-2">
+                  <div 
+                    v-for="job in currentService.jobs_done" 
+                    :key="job"
+                    class="flex items-start justify-between gap-3 p-4 bg-[var(--card)] border border-[var(--border)] hover:border-[var(--accent)]/40 transition-colors"
+                    style="border-radius: 8px;"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <p class="text-base font-semibold text-[var(--foreground)] mb-2">
+                        {{ getJobLabel(job) }}
+                      </p>
+                      <div v-if="getJobPartDetails(job)" class="flex flex-wrap gap-2">
+                        <span 
+                          v-if="getJobPartDetails(job).condition"
+                          :class="[
+                            'text-xs px-2.5 py-1 rounded font-medium',
+                            getJobPartDetails(job).condition === 'brand_new' 
+                              ? 'bg-green-500/20 text-green-400' 
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          ]"
+                        >
+                          {{ getJobPartDetails(job).condition === 'brand_new' ? 'Brand New' : 'Surplus' }}
+                        </span>
+                        <span 
+                          v-if="getJobPartDetails(job).isOwnerPart"
+                          class="text-xs px-2.5 py-1 rounded font-medium bg-purple-500/20 text-purple-400"
+                        >
+                          Owner's Part
+                        </span>
+                      </div>
+                    </div>
+                    <svg class="w-6 h-6 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <div v-else class="p-6 text-center text-sm text-[var(--muted-foreground)] bg-[var(--muted)]/30 border border-[var(--border)]" style="border-radius: 8px;">
+                  No jobs recorded
+                </div>
+              </div>
+
+              <!-- Notes Section -->
+              <div v-if="currentService.description">
+                <div class="flex items-center gap-2 mb-4">
+                  <svg class="w-5 h-5 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <h3 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wide">Service Notes</h3>
+                </div>
+                <div class="p-4 bg-[var(--muted)]/30 border border-[var(--border)]" style="border-radius: 8px;">
+                  <p class="text-base text-[var(--foreground)] leading-relaxed whitespace-pre-wrap">{{ currentService.description }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+              <!-- Customer Info -->
+              <div class="p-5 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 8px;">
+                <h3 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wide mb-4">Customer Information</h3>
+                <div class="space-y-3">
+                  <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-[var(--muted-foreground)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div>
+                      <p class="text-xs text-[var(--muted-foreground)] font-medium">Name</p>
+                      <p class="text-base font-semibold text-[var(--foreground)]">{{ currentService.customer_name || 'Walk-in Customer' }}</p>
+                    </div>
+                  </div>
+                  <div v-if="currentService.phone" class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-[var(--muted-foreground)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <div>
+                      <p class="text-xs text-[var(--muted-foreground)] font-medium">Phone</p>
+                      <p class="text-base font-semibold text-[var(--foreground)]">{{ currentService.phone }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Vehicle Info -->
+              <div v-if="currentService.car_model || currentService.car_year" class="p-5 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 8px;">
+                <h3 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wide mb-4">Vehicle Information</h3>
+                <div class="flex items-center gap-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[var(--muted-foreground)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 13l1-3h16l1 3M5 16h14a2 2 0 002-2v-2a2 2 0 00-2-2H5a2 2 0 00-2 2v2a2 2 0 002 2zm2 4a1 1 0 110-2 1 1 0 010 2zm10 0a1 1 0 110-2 1 1 0 010 2z" />
+                  </svg>
+                  <div>
+                    <p class="text-xs text-[var(--muted-foreground)] font-medium">Model & Year</p>
+                    <p class="text-base font-semibold text-[var(--foreground)]">
+                      {{ currentService.car_model || 'N/A' }}
+                      <span v-if="currentService.car_year" class="text-[var(--muted-foreground)]"> ({{ currentService.car_year }})</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Metadata -->
+              <div v-if="currentService.created_at" class="p-4 bg-[var(--muted)]/20 border border-[var(--border)]" style="border-radius: 8px;">
+                <p class="text-xs text-[var(--muted-foreground)] text-center">
+                  Record created {{ formatDate(currentService.created_at) }}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -198,8 +443,8 @@
       <ServiceHistoryList
         v-if="showFullHistory"
         :jobs="jobHistory"
-        :plate-number="service.plate_number"
-        :current-job-id="service.id"
+        :plate-number="currentService.plate_number"
+        :current-job-id="currentService.id"
         :is-sidebar-collapsed="isSidebarCollapsed"
         @close="showFullHistory = false"
         @select-job="handleJobSelect"
@@ -254,14 +499,45 @@ const showFullHistory = ref(false)
 const showEditForm = ref(false)
 const currentService = ref({ ...props.service })
 
+// Job label mapping
+const jobLabels = {
+  // Replace jobs
+  replace_evaporator_front: 'Evaporator Front',
+  replace_evaporator_rear: 'Evaporator Rear',
+  replace_condenser: 'Condenser',
+  replace_compressor: 'Compressor',
+  replace_blower_motor: 'Blower Motor',
+  replace_expansion_valve: 'Expansion Valve',
+  replace_pulley_assembly: 'Pulley Assembly',
+  replace_fan_motor: 'Fan Motor',
+  replace_suction_hose_assembly: 'Suction Hose Assembly',
+  replace_fan_belt: 'Fan Belt',
+  replace_filter_drier: 'Filter Drier',
+  replace_discharge_hose_suction: 'Discharge Hose Suction',
+  replace_ecv: 'ECV',
+  replace_oring: 'O-ring',
+  replace_radiator: 'Radiator',
+  replace_cabin_filter: 'Cabin Filter',
+  replace_magnetic: 'Magnetic',
+  // Pulldown jobs
+  pulldown_evaporator: 'Pulldown Evaporator',
+  pulldown_condenser: 'Pulldown Condenser',
+  pulldown_compressor: 'Pulldown Compressor',
+  // Other jobs
+  flushing_system: 'Flushing System',
+  install_cabin_filter: 'Install Cabin Filter',
+  cleaning: 'Cleaning',
+  freon: 'Freon'
+}
+
 // Calculate job history for the same plate number (sorted by date descending)
 const jobHistory = computed(() => {
-  if (!props.service.plate_number || !props.allServices.length) {
+  if (!currentService.value.plate_number || !props.allServices.length) {
     return []
   }
   
   return props.allServices
-    .filter(s => s.plate_number === props.service.plate_number)
+    .filter(s => s.plate_number === currentService.value.plate_number)
     .sort((a, b) => new Date(b.service_date) - new Date(a.service_date))
 })
 
@@ -277,6 +553,22 @@ const warrantyStatus = computed(() => {
   
   return daysDiff <= warrantyPeriodDays ? 'active' : 'expired'
 })
+
+function getJobLabel(jobKey) {
+  return jobLabels[jobKey] || jobKey
+}
+
+function getJobPartDetails(jobKey) {
+  const condition = currentService.value.part_condition?.[jobKey]
+  const isOwnerPart = currentService.value.owner_parts?.[jobKey]
+  
+  if (!condition && !isOwnerPart) return null
+  
+  return {
+    condition,
+    isOwnerPart
+  }
+}
 
 function close() {
   emit('close')

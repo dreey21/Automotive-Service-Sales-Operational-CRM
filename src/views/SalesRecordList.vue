@@ -34,7 +34,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search plate number, customer, service..."
+          placeholder="Search plate number, customer, invoice..."
           class="w-full h-11 pl-11 pr-3 bg-[var(--card)] border border-[var(--border)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors"
           style="border-radius: 6px;"
         />
@@ -177,24 +177,22 @@
             <thead>
               <tr class="border-b border-[var(--border)] bg-[var(--muted)]/40">
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Customer</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Service</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Status</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
-                <th class="h-10 px-4 text-right text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
                 <th class="h-10 w-[48px]"></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="i in 10" :key="`skel-row-${i}`" class="border-b border-[var(--border)] animate-pulse">
                 <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[70px]" style="border-radius: 3px;"></div></td>
+                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
+                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[70px]" style="border-radius: 3px;"></div></td>
                 <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[90px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
                 <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[120px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[50px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[60px] ml-auto" style="border-radius: 3px;"></div></td>
+                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[90px]" style="border-radius: 3px;"></div></td>
                 <td class="px-2 py-4"><div class="h-3.5 bg-[var(--muted)] w-[18px] mx-auto" style="border-radius: 3px;"></div></td>
               </tr>
             </tbody>
@@ -222,13 +220,21 @@
         <div
           v-for="service in filteredServices"
           :key="`card-${service.id}`"
-          class="relative bg-[var(--card)] border border-[var(--border)] p-3 hover:border-[var(--accent)]/40 transition-colors cursor-pointer active:bg-[var(--muted)]/30"
+          class="relative bg-[var(--card)] border border-[var(--border)] p-3 hover:border-[var(--accent)]/60 hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
           style="border-radius: 6px;"
           @click="openViewModal(service)"
         >
           <!-- Loading Overlay -->
           <div v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" style="border-radius: 6px;">
             <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+
+          <!-- Click Hint Icon -->
+          <div class="absolute top-2.5 left-2.5 opacity-0 group-hover:opacity-40 transition-opacity">
+            <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
           </div>
 
           <!-- Menu Button -->
@@ -272,35 +278,53 @@
 
           <!-- Card Content -->
           <div class="pr-8">
-            <div class="flex items-baseline justify-between mb-1.5">
-              <h3 class="text-[15px] font-bold text-[var(--foreground)] truncate flex-1 leading-tight font-mono tracking-wide">
-                {{ service.plate_number || 'Walk-in Customer' }}
+            <!-- Primary: Plate Number + Date -->
+            <div class="flex items-baseline justify-between mb-2">
+              <h3 class="text-base font-extrabold text-[var(--foreground)] truncate flex-1 leading-tight font-mono tracking-wider">
+                {{ service.plate_number || 'Walk-in' }}
                 <span v-if="hasJobHistory(service.plate_number)" class="ml-1.5 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium tracking-normal">
-                  {{ getJobCount(service.plate_number) }} jobs
+                  {{ getJobCount(service.plate_number) }} Records
                 </span>
               </h3>
-              <span class="truncate text-xs font-bold text-[var(--accent)]">{{ formatDate(service.service_date) }}</span>
+              <span class="text-sm font-bold text-[var(--accent)] flex-shrink-0">{{ formatDate(service.service_date) }}</span>
             </div>
 
-            <div class="flex items-center gap-1.5 mb-1 text-[13px] text-[var(--muted-foreground)]">
-              <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <!-- Secondary: Jobs Done -->
+            <div class="flex items-center gap-1.5 mb-2 text-[13px]">
+              <svg class="w-3.5 h-3.5 flex-shrink-0 text-[var(--muted-foreground)] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              <span class="truncate">
-                <span v-if="service.customer_name">{{ service.customer_name }}</span>
-                <span v-else class="italic opacity-60">No name provided</span>
-                <span v-if="service.customer_name && service.car_model" class="opacity-100 mx-1">·</span>
-                <span v-if="service.car_model" class="font-extrabold">{{ service.car_model }}</span>
+              <span class="truncate font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
+            </div>
+
+            <!-- Part Details badges -->
+            <div v-if="hasPartConditions(service)" class="mb-2 flex flex-wrap gap-1">
+              <span v-for="(condition, job) in getPartDetailsSummary(service)" :key="job" :class="[
+                'text-[10px] px-1.5 py-0.5 rounded font-medium',
+                condition === 'Brand New' ? 'bg-green-500/20 text-green-400' :
+                condition === 'Surplus' ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-purple-500/20 text-purple-400'
+              ]">
+                {{ condition }}
               </span>
             </div>
 
-            <div class="flex items-center gap-1.5 text-xs font-semibold text-[var(--muted-foreground)]">
-              <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            <!-- Tertiary: Cost -->
+            <div class="mb-2">
+              <span class="text-lg font-extrabold text-blue-300 tabular-nums">₱{{ service.cost.toFixed(2) }}</span>
+            </div>
+
+            <!-- Quaternary: Vehicle Model + Customer -->
+            <div class="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
+              <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0h.01M15 17a2 2 0 104 0m-4 0h.01M17 16h.01" />
               </svg>
-              <span class="truncate">{{ service.service_type }}</span>
-              <span class="text-xs text-green-500 ml-3 flex-shrink-0 tabular-nums">
-                ₱{{ service.cost.toFixed(2) }}
+              <span class="truncate">
+                <span v-if="service.car_model" class="font-semibold">{{ service.car_model }}</span>
+                <span v-else class="italic opacity-60">No vehicle</span>
+                <span v-if="service.car_model && service.customer_name" class="opacity-100 mx-1">·</span>
+                <span v-if="service.customer_name" class="opacity-75">{{ service.customer_name }}</span>
               </span>
             </div>
           </div>
@@ -313,12 +337,11 @@
           <thead>
             <tr class="border-b border-[var(--border)] bg-[var(--muted)]/40">
               <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Customer</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Service</th>
               <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Status</th>
-              <th class="h-10 px-4 text-right text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
+              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
+              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
+              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
+              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
               <th class="h-10 w-[48px]"></th>
             </tr>
           </thead>
@@ -326,7 +349,7 @@
             <tr
               v-for="service in filteredServices"
               :key="`row-${service.id}`"
-              class="relative border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--muted)]/30 transition-colors cursor-pointer"
+              class="relative border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--muted)]/40 hover:shadow-sm transition-all cursor-pointer group"
               @click="openViewModal(service)"
             >
               <!-- Loading Overlay -->
@@ -335,45 +358,57 @@
               </td>
 
               <!-- Plate Number -->
-              <td class="px-4 py-3">
-                <span class="text-sm font-bold text-[var(--foreground)] tracking-wide">
-                  {{ service.plate_number || '—' }}
-                </span>
-                <span v-if="hasJobHistory(service.plate_number)" class="ml-1.5 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium">
-                  {{ getJobCount(service.plate_number) }} jobs
-                </span>
+              <td class="px-4 py-3 group-hover:scale-[1.01] transition-transform">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-[var(--accent)] opacity-0 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  <div>
+                    <span class="text-sm font-extrabold text-[var(--foreground)] tracking-wider">
+                      {{ service.plate_number || '—' }}
+                    </span>
+                    <span v-if="hasJobHistory(service.plate_number)" class="ml-1.5 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium">
+                      {{ getJobCount(service.plate_number) }} Records
+                    </span>
+                  </div>
+                </div>
               </td>
 
-              <!-- Customer Name -->
+              <!-- Date -->
               <td class="px-4 py-3">
-                <span v-if="service.customer_name" class="text-sm text-[var(--muted-foreground)]">{{ service.customer_name }}</span>
-                <span v-else class="text-sm text-[var(--muted-foreground)] italic opacity-60">Walk-in</span>
+                <span class="text-sm font-bold text-[var(--accent)]">{{ formatDate(service.service_date) }}</span>
+              </td>
+
+              <!-- Jobs Done -->
+              <td class="px-4 py-3">
+                <span class="text-sm font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
+              </td>
+              
+              <!-- Part Details -->
+              <td class="px-4 py-3">
+                <div v-if="hasPartConditions(service)" class="flex flex-wrap gap-1">
+                  <span v-for="(condition, job) in getPartDetailsSummary(service)" :key="job" :class="[
+                    'text-[10px] px-2 py-0.5 rounded font-medium whitespace-nowrap',
+                    condition === 'Brand New' ? 'bg-green-500/20 text-green-400' :
+                    condition === 'Surplus' ? 'bg-yellow-500/20 text-yellow-400' :
+                    'bg-purple-500/20 text-purple-400'
+                  ]">
+                    {{ condition }}
+                  </span>
+                </div>
+                <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
+              </td>
+
+              <!-- Cost -->
+              <td class="px-4 py-3">
+                <span class="text-base font-extrabold text-blue-300 tabular-nums">₱{{ service.cost.toFixed(2) }}</span>
               </td>
 
               <!-- Car Model -->
               <td class="px-4 py-3">
                 <span v-if="service.car_model" class="text-sm font-semibold text-[var(--foreground)]">{{ service.car_model }}</span>
                 <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
-              </td>
-
-              <!-- Service Type -->
-              <td class="px-4 py-3">
-                <span class="text-sm text-[var(--muted-foreground)]">{{ service.service_type }}</span>
-              </td>
-
-              <!-- Warranty Status -->
-              <td class="px-4 py-3">
-                <span class="text-sm font-semibold text-[var(--foreground)]">#{{ service.warranty_status}}</span>
-              </td>
-
-              <!-- Date -->
-              <td class="px-4 py-3">
-                <span class="text-sm font-semibold text-[var(--accent)]">{{ formatDate(service.service_date) }}</span>
-              </td>
-              
-              <!-- Cost -->
-              <td class="px-4 py-3 text-right">
-                <span class="text-sm font-bold text-green-500 tabular-nums">₱{{ service.cost.toFixed(2) }}</span>
               </td>
 
               <!-- Row Actions -->
@@ -526,6 +561,86 @@ const months = [
   { value: '12', label: 'Dec' }
 ]
 
+// Job label mapping
+const jobLabels = {
+  // Replace jobs
+  replace_evaporator_front: 'Evaporator Front',
+  replace_evaporator_rear: 'Evaporator Rear',
+  replace_condenser: 'Condenser',
+  replace_compressor: 'Compressor',
+  replace_blower_motor: 'Blower Motor',
+  replace_expansion_valve: 'Expansion Valve',
+  replace_pulley_assembly: 'Pulley Assembly',
+  replace_fan_motor: 'Fan Motor',
+  replace_suction_hose_assembly: 'Suction Hose Assembly',
+  replace_fan_belt: 'Fan Belt',
+  replace_filter_drier: 'Filter Drier',
+  replace_discharge_hose_suction: 'Discharge Hose Suction',
+  replace_ecv: 'ECV',
+  replace_oring: 'O-ring',
+  replace_radiator: 'Radiator',
+  replace_cabin_filter: 'Cabin Filter',
+  replace_magnetic: 'Magnetic',
+  // Pulldown jobs
+  pulldown_evaporator: 'Pulldown Evaporator',
+  pulldown_condenser: 'Pulldown Condenser',
+  pulldown_compressor: 'Pulldown Compressor',
+  // Other jobs
+  flushing_system: 'Flushing System',
+  install_cabin_filter: 'Install Cabin Filter',
+  cleaning: 'Cleaning',
+  freon: 'Freon'
+}
+
+function getJobsSummary(jobs) {
+  if (!jobs || jobs.length === 0) return 'No jobs'
+  
+  if (jobs.length === 1) {
+    return jobLabels[jobs[0]] || jobs[0]
+  }
+  
+  if (jobs.length === 2) {
+    return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]}`
+  }
+  
+  return `${jobLabels[jobs[0]] || jobs[0]} +${jobs.length - 1} more`
+}
+
+function hasPartConditions(service) {
+  if (!service.part_condition && !service.owner_parts) return false
+  
+  const hasConditions = service.part_condition && Object.keys(service.part_condition).length > 0
+  const hasOwnerParts = service.owner_parts && Object.keys(service.owner_parts).some(key => service.owner_parts[key])
+  
+  return hasConditions || hasOwnerParts
+}
+
+function getPartDetailsSummary(service) {
+  const summary = {}
+  
+  // Add part conditions (Brand New, Surplus)
+  if (service.part_condition) {
+    Object.entries(service.part_condition).forEach(([job, condition]) => {
+      if (condition === 'brand_new') {
+        summary[job] = 'Brand New'
+      } else if (condition === 'surplus') {
+        summary[job] = 'Surplus'
+      }
+    })
+  }
+  
+  // Add owner's parts
+  if (service.owner_parts) {
+    Object.entries(service.owner_parts).forEach(([job, isOwner]) => {
+      if (isOwner) {
+        summary[job] = "Owner's Part"
+      }
+    })
+  }
+  
+  return summary
+}
+
 const availableYears = computed(() => {
   const years = new Set()
   mockDatabase.forEach(service => {
@@ -605,7 +720,8 @@ function fetchServices(page, query = '', month = '', year = '') {
             s.phone?.toLowerCase().includes(q) ||
             s.car_model?.toLowerCase().includes(q) ||
             s.plate_number?.toLowerCase().includes(q) ||
-            s.service_type?.toLowerCase().includes(q)
+            s.invoice?.toLowerCase().includes(q) ||
+            s.jobs_done?.some(job => jobLabels[job]?.toLowerCase().includes(q))
           )
         }
 

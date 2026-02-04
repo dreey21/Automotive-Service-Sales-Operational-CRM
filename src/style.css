@@ -82,7 +82,7 @@ body::-webkit-scrollbar {
     /* Original color scheme */
     --background: #0A0A0F;
     --background-alt: #12121A;
-    --foreground: #FAFAFA;
+    --foreground: #F2F0EF;
     --muted: #1A1A24;
     --muted-foreground: #71717A;
     --accent: #F59E0B;  /* Changed back to your original yellow/amber */
@@ -93,7 +93,7 @@ body::-webkit-scrollbar {
     --card: rgba(26, 26, 36, 0.6);
     --card-solid: #1A1A24;
     --ring: #F59E0B;  /* Changed back to yellow/amber */
-    --secondary: #f1f5f9;
+    --secondary: #7DF9FF;
     --secondary-foreground: #0f172a;
     
     /* Shadcn compatibility */
