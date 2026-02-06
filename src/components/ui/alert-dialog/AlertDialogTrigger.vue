@@ -1,11 +1,9 @@
 <script setup>
-import { AlertDialogTrigger } from "reka-ui";
-
-const props = defineProps();
+import { AlertDialogTrigger } from 'reka-ui'
 </script>
 
 <template>
-  <AlertDialogTrigger v-bind="props">
+  <AlertDialogTrigger>
     <slot />
   </AlertDialogTrigger>
 </template>

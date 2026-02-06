@@ -43,16 +43,16 @@
           v-for="job in recentJobs"
           :key="job.id"
           :class="[
-            'flex-shrink-0 w-64 p-3 border transition-all duration-300 snap-start cursor-pointer animate-slide-in',
+            'flex-shrink-0 w-64 p-3 transition-all duration-300 snap-start cursor-pointer animate-slide-in',
             job.id === currentJobId 
-              ? 'bg-[var(--accent)]/15 border-[var(--accent)] ring-1 ring-[var(--accent)]/30' 
-              : 'bg-gray-800/40 border-gray-700/50 hover:border-[var(--accent)]/40 hover:bg-gray-800/60 active:scale-95'
+              ? 'bg-[var(--accent)]/15 border border-[var(--accent)]' 
+              : 'bg-gray-800/40 border border-gray-700/50 hover:border-[var(--accent)]/40 hover:bg-gray-800/60 active:scale-95'
           ]"
           style="border-radius: 8px;"
           @click="job.id !== currentJobId && $emit('select-job', job)"
         >
           <!-- Card Header -->
-          <div class="flex items-start justify-between gap-1 mb-1">
+          <div class="flex items-start justify-between gap-1 mb-1 min-h-[20px]">
             <div class="flex items-center gap-2 min-w-0 flex-1">
               <div 
                 v-if="job.id === currentJobId" 
@@ -66,25 +66,42 @@
             >
               Now
             </span>
+            <!-- Invisible placeholder to maintain height when not active -->
+            <span 
+              v-else
+              class="text-[9px] px-1.5 py-0.5 opacity-0 flex-shrink-0"
+              style="border-radius: 3px;"
+            >
+              Now
+            </span>
           </div>
           
           <!-- Date -->
-          <div class="flex items-center gap-1.5 mb-1">
+          <div class="flex items-center gap-1.5 mb-2">
             <svg class="w-4 h-4 text-white flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <span class="text-base font-medium text-white">{{ formatDate(job.service_date) }}</span>
           </div>
           
-          <!-- Jobs done count -->
-          <div class="pt-2 border-t border-[var(--border)]/50">
-            <div class="flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-[var(--muted-foreground)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-xs font-semibold text-[var(--foreground)]">
-                {{ job.jobs_done?.length || 0 }} job{{ (job.jobs_done?.length || 0) !== 1 ? 's' : '' }}
-              </span>
+          <!-- Jobs done list -->
+          <div class="pt-2 border-t border-white/50">
+            <div v-if="job.jobs_done && job.jobs_done.length > 0" class="space-y-1.5">
+              <div 
+                v-for="(jobDone, index) in job.jobs_done" 
+                :key="index"
+                class="flex items-start gap-1.5"
+              >
+                <svg class="w-3 h-3 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-xs text-white leading-snug">
+                  {{ getJobLabel(jobDone) }}
+                </span>
+              </div>
+            </div>
+            <div v-else class="text-xs text-[var(--muted-foreground)] italic">
+              No jobs recorded
             </div>
           </div>
         </div>
@@ -191,6 +208,37 @@ const emit = defineEmits(['select-job', 'view-all'])
 const scrollContainer = ref(null)
 const currentScrollIndex = ref(0)
 
+// Job label mapping (same as ViewModal)
+const jobLabels = {
+  // Replace jobs
+  replace_evaporator_front: 'Evaporator Front',
+  replace_evaporator_rear: 'Evaporator Rear',
+  replace_condenser: 'Condenser',
+  replace_compressor: 'Compressor',
+  replace_blower_motor: 'Blower Motor',
+  replace_expansion_valve: 'Expansion Valve',
+  replace_pulley_assembly: 'Pulley Assembly',
+  replace_fan_motor: 'Fan Motor',
+  replace_suction_hose_assembly: 'Suction Hose Assembly',
+  replace_fan_belt: 'Fan Belt',
+  replace_filter_drier: 'Filter Drier',
+  replace_discharge_hose_suction: 'Discharge Hose Suction',
+  replace_ecv: 'ECV',
+  replace_oring: 'O-ring',
+  replace_radiator: 'Radiator',
+  replace_cabin_filter: 'Cabin Filter',
+  replace_magnetic: 'Magnetic',
+  // Pulldown jobs
+  pulldown_evaporator: 'Pulldown Evaporator',
+  pulldown_condenser: 'Pulldown Condenser',
+  pulldown_compressor: 'Pulldown Compressor',
+  // Other jobs
+  flushing_system: 'Flushing System',
+  install_cabin_filter: 'Install Cabin Filter',
+  cleaning: 'Cleaning',
+  freon: 'Freon'
+}
+
 // Only show the most recent jobs (max 5)
 const recentJobs = computed(() => {
   return props.jobs.slice(0, props.maxRecent)
@@ -201,6 +249,10 @@ const totalCount = computed(() => props.jobs.length)
 const hasMoreThanRecent = computed(() => {
   return props.jobs.length > props.maxRecent
 })
+
+function getJobLabel(jobKey) {
+  return jobLabels[jobKey] || jobKey
+}
 
 function handleScroll() {
   if (!scrollContainer.value) return
