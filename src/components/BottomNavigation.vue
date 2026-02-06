@@ -1,6 +1,6 @@
 <template>
   <!-- Only show on mobile, completely hidden on desktop -->
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-xl border-t border-muted shadow-2xl z-50">
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-muted shadow-2xl z-50">
     <div class="container mx-auto">
       <div class="flex">
         <RouterLink

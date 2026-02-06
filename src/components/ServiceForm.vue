@@ -24,7 +24,11 @@
       <StepIndicator :current-step="currentStep" />
 
       <!-- Scrollable Content with bottom padding for mobile nav -->
-      <div class="flex-1 overflow-y-auto pb-[140px] md:pb-0">
+      <div 
+        ref="scrollContainer"
+        class="flex-1 overflow-y-auto pb-[140px] md:pb-0"
+        @touchmove="handleTouchMove"
+      >
         <!-- Desktop: Single Column Layout -->
         <form @submit.prevent="handleNext" class="p-5 space-y-5">
           <!-- STEP 1: Client & Vehicle -->
@@ -261,6 +265,8 @@
                   id="invoice"
                   v-model="formData.invoice"
                   type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
                   class="w-full h-12 px-4 bg-[var(--muted)] border-2 border-[var(--border)] text-base text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:border-[var(--accent)] transition-all rounded-lg"
                   placeholder="1234"
                 />
@@ -620,7 +626,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import StepIndicator from './StepIndicator.vue'
 import ServicesBottomSheet from './ServicesBottomSheet.vue'
 import {
@@ -648,9 +654,14 @@ const isServicesExpanded = ref(false)
 const errors = ref({})
 const searchQuery = ref('')
 const searchInput = ref(null)
+const scrollContainer = ref(null)
 const focusedJobIndex = ref(-1)
 const jobRefs = ref([])
 const isMobile = ref(window.innerWidth < 768)
+
+// Touch and scroll tracking
+const touchMoveTimeout = ref(null)
+const hasTouchMoved = ref(false)
 
 // AlertDialog states
 const showDiscardDialog = ref(false)
@@ -764,6 +775,45 @@ function toggleJob(jobValue) {
   }
 }
 
+// NEW: Handle touch move - dismiss keyboard immediately when user tries to scroll
+function handleTouchMove(event) {
+  if (!isMobile.value) return
+  
+  // Clear existing timeout
+  if (touchMoveTimeout.value) {
+    clearTimeout(touchMoveTimeout.value)
+  }
+  
+  // Mark that touch has moved
+  if (!hasTouchMoved.value) {
+    hasTouchMoved.value = true
+    
+    // Immediately blur any focused input
+    const activeElement = document.activeElement
+    if (activeElement && (
+      activeElement.tagName === 'INPUT' || 
+      activeElement.tagName === 'TEXTAREA'
+    )) {
+      activeElement.blur()
+      
+      // Force blur by focusing on a different element temporarily
+      const tempButton = document.createElement('button')
+      tempButton.style.position = 'fixed'
+      tempButton.style.top = '-9999px'
+      document.body.appendChild(tempButton)
+      tempButton.focus()
+      setTimeout(() => {
+        document.body.removeChild(tempButton)
+      }, 0)
+    }
+  }
+  
+  // Reset the flag after a short delay
+  touchMoveTimeout.value = setTimeout(() => {
+    hasTouchMoved.value = false
+  }, 300)
+}
+
 function handleKeyboardNav(event) {
   const totalJobs = allFilteredJobs.value.length
   
@@ -858,10 +908,20 @@ onMounted(() => {
     hasUnsavedChanges.value = false
   }
   
-  window.addEventListener('resize', () => {
+  const handleResize = () => {
     isMobile.value = window.innerWidth < 768
     if (isMobile.value && isServicesExpanded.value) {
       isServicesExpanded.value = false
+    }
+  }
+  
+  window.addEventListener('resize', handleResize)
+  
+  // Cleanup on unmount
+  onUnmounted(() => {
+    window.removeEventListener('resize', handleResize)
+    if (touchMoveTimeout.value) {
+      clearTimeout(touchMoveTimeout.value)
     }
   })
 })
