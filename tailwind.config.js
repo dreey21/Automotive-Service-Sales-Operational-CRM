@@ -72,7 +72,7 @@ export default {
   			}
   		},
   		animation: {
-  			'in': 'fadeIn 200ms ease-out'
+  			'in': 'fadeIn 200ms ease-out',
   		},
   		keyframes: {
   			fadeIn: {

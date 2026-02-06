@@ -15,7 +15,9 @@ export const mockDatabase = [
     part_condition: { replace_cabin_filter: 'brand_new' },
     cost: 150.00,
     description: 'Recharged AC system, checked for leaks, replaced cabin filter',
-    created_at: '2024-01-20'
+    created_at: '2024-01-19',
+    updated_at: '2024-01-20',
+    updated_by: 'admin'
   },
   {
     id: 3,
@@ -31,7 +33,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Routine inspection and maintenance check',
-    created_at: '2024-01-25'
+    created_at: '2024-01-25',
+    updated_at: '2024-01-26',
+    updated_by: 'admin'
   },
   {
     id: 5,
@@ -47,7 +51,9 @@ export const mockDatabase = [
     part_condition: { replace_oring: 'brand_new' },
     cost: 280.00,
     description: 'Fixed refrigerant leak, replaced O-rings',
-    created_at: '2023-12-15'
+    created_at: '2023-12-15',
+    updated_at: '2023-12-15',
+    updated_by: 'admin'
   },
   {
     id: 6,
@@ -63,7 +69,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'Regular AC recharge and filter cleaning',
-    created_at: '2023-11-05'
+    created_at: '2023-11-05',
+    updated_at: '2023-11-05',
+    updated_by: 'admin'
   },
   {
     id: 7,
@@ -79,7 +87,9 @@ export const mockDatabase = [
     part_condition: { replace_compressor: 'brand_new' },
     cost: 580.00,
     description: 'Replaced faulty compressor, full system flush',
-    created_at: '2023-08-20'
+    created_at: '2023-08-20',
+    updated_at: '2023-08-21',
+    updated_by: 'admin'
   },
   {
     id: 101,
@@ -95,7 +105,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Summer maintenance check',
-    created_at: '2023-06-10'
+    created_at: '2023-06-10',
+    updated_at: '2023-06-10',
+    updated_by: 'admin'
   },
   {
     id: 102,
@@ -111,7 +123,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'Pre-summer AC service',
-    created_at: '2023-04-22'
+    created_at: '2023-04-22',
+    updated_at: '2023-04-22',
+    updated_by: 'admin'
   },
   {
     id: 103,
@@ -127,7 +141,9 @@ export const mockDatabase = [
     part_condition: { replace_blower_motor: 'surplus' },
     cost: 220.00,
     description: 'Fixed blower motor noise, lubricated bearings',
-    created_at: '2023-02-14'
+    created_at: '2023-02-14',
+    updated_at: '2023-02-14',
+    updated_by: 'admin'
   },
   
   // Jane Smith - XYZ 5678 (7 jobs total)
@@ -145,7 +161,9 @@ export const mockDatabase = [
     part_condition: { replace_compressor: 'brand_new', replace_condenser: 'brand_new' },
     cost: 350.00,
     description: 'Replaced compressor, cleaned condenser, full system diagnostic',
-    created_at: '2024-01-22'
+    created_at: '2024-01-22',
+    updated_at: '2024-01-22',
+    updated_by: 'admin'
   },
   {
     id: 8,
@@ -161,7 +179,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Pre-winter AC system check',
-    created_at: '2023-10-10'
+    created_at: '2023-10-10',
+    updated_at: '2023-10-10',
+    updated_by: 'admin'
   },
   {
     id: 9,
@@ -177,7 +197,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'Summer AC recharge service',
-    created_at: '2023-07-15'
+    created_at: '2023-07-15',
+    updated_at: '2023-07-15',
+    updated_by: 'admin'
   },
   {
     id: 104,
@@ -193,7 +215,9 @@ export const mockDatabase = [
     part_condition: { replace_expansion_valve: 'brand_new' },
     cost: 280.00,
     description: 'Replaced expansion valve, system flush',
-    created_at: '2023-05-20'
+    created_at: '2023-05-20',
+    updated_at: '2023-05-20',
+    updated_by: 'admin'
   },
   {
     id: 105,
@@ -209,7 +233,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Spring AC performance check',
-    created_at: '2023-03-08'
+    created_at: '2023-03-08',
+    updated_at: '2023-03-08',
+    updated_by: 'admin'
   },
   {
     id: 106,
@@ -225,7 +251,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'New year AC maintenance',
-    created_at: '2023-01-15'
+    created_at: '2023-01-15',
+    updated_at: '2023-01-15',
+    updated_by: 'admin'
   },
   {
     id: 107,
@@ -241,7 +269,9 @@ export const mockDatabase = [
     part_condition: { replace_suction_hose_assembly: 'surplus' },
     cost: 320.00,
     description: 'Fixed condenser leak, replaced hoses',
-    created_at: '2022-11-28'
+    created_at: '2022-11-28',
+    updated_at: '2022-11-29',
+    updated_by: 'admin'
   },
   
   // Maria Garcia - DEF 9012 (10 jobs total)
@@ -259,7 +289,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Regular maintenance inspection',
-    created_at: '2024-01-20'
+    created_at: '2024-01-20',
+    updated_at: '2024-01-20',
+    updated_by: 'admin'
   },
   {
     id: 11,
@@ -275,7 +307,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'Holiday season AC recharge',
-    created_at: '2023-12-20'
+    created_at: '2023-12-20',
+    updated_at: '2023-12-20',
+    updated_by: 'admin'
   },
   {
     id: 12,
@@ -291,7 +325,9 @@ export const mockDatabase = [
     part_condition: { replace_blower_motor: 'brand_new' },
     cost: 320.00,
     description: 'Fixed blower motor issue, replaced fuse',
-    created_at: '2023-09-18'
+    created_at: '2023-09-18',
+    updated_at: '2023-09-18',
+    updated_by: 'admin'
   },
   {
     id: 13,
@@ -307,7 +343,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Mid-year AC performance check',
-    created_at: '2023-06-05'
+    created_at: '2023-06-05',
+    updated_at: '2023-06-05',
+    updated_by: 'admin'
   },
   {
     id: 108,
@@ -323,7 +361,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'Spring AC recharge and cleaning',
-    created_at: '2023-04-12'
+    created_at: '2023-04-12',
+    updated_at: '2023-04-12',
+    updated_by: 'admin'
   },
   {
     id: 109,
@@ -339,7 +379,9 @@ export const mockDatabase = [
     part_condition: { replace_expansion_valve: 'surplus' },
     cost: 280.00,
     description: 'Replaced thermostat, fixed temperature control',
-    created_at: '2023-02-25'
+    created_at: '2023-02-25',
+    updated_at: '2023-02-25',
+    updated_by: 'admin'
   },
   {
     id: 110,
@@ -355,7 +397,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'End of year AC system check',
-    created_at: '2022-12-10'
+    created_at: '2022-12-10',
+    updated_at: '2022-12-10',
+    updated_by: 'admin'
   },
   {
     id: 111,
@@ -371,7 +415,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 150.00,
     description: 'Fall maintenance recharge',
-    created_at: '2022-09-30'
+    created_at: '2022-09-30',
+    updated_at: '2022-09-30',
+    updated_by: 'admin'
   },
   {
     id: 112,
@@ -387,7 +433,9 @@ export const mockDatabase = [
     part_condition: { replace_compressor: 'brand_new' },
     cost: 580.00,
     description: 'Major service - new compressor installed',
-    created_at: '2022-07-18'
+    created_at: '2022-07-18',
+    updated_at: '2022-07-18',
+    updated_by: 'admin'
   },
   {
     id: 113,
@@ -403,7 +451,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Initial AC system evaluation',
-    created_at: '2022-05-05'
+    created_at: '2022-05-05',
+    updated_at: '2022-05-05',
+    updated_by: 'admin'
   },
   
   // Walk-in customer
@@ -421,7 +471,9 @@ export const mockDatabase = [
     part_condition: {},
     cost: 50.00,
     description: 'Walk-in customer, quick AC check',
-    created_at: '2024-01-26'
+    created_at: '2024-01-26',
+    updated_at: '2024-01-26',
+    updated_by: 'admin'
   },
   
   // Generate additional mock data - IDs starting from 114
@@ -444,6 +496,8 @@ export const mockDatabase = [
     part_condition: i % 4 === 1 ? { replace_condenser: i % 2 === 0 ? 'brand_new' : 'surplus' } : i % 4 === 3 ? { replace_compressor: 'brand_new' } : {},
     cost: [150, 350, 50, 580][i % 4],
     description: `Service description for record ${i + 114}`,
-    created_at: `2024-0${((i % 9) + 1)}-${String((i % 28) + 1).padStart(2, '0')}`
+    created_at: `2024-0${((i % 9) + 1)}-${String((i % 28) + 1).padStart(2, '0')}`,
+    updated_at: `2024-0${((i % 9) + 1)}-${String((i % 28) + 1).padStart(2, '0')}`,
+    updated_by: 'admin'
   }))
 ]

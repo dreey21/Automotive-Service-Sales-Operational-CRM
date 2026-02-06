@@ -55,7 +55,7 @@
       />
 
       <!-- Scrollable Content -->
-      <div class="flex-1 overflow-y-auto hide-scrollbar">
+      <div class="flex-1 overflow-y-auto hide-scrollbar pb-20 md:pb-0">
         <!-- MOBILE LAYOUT (default) -->
         <div class="md:hidden p-4 space-y-5">
           
@@ -240,11 +240,24 @@
             </div>
           </div>
 
-          <!-- Metadata -->
-          <div v-if="currentService.created_at" class="pt-3 border-t border-[var(--border)]">
-            <p class="text-xs text-[var(--muted-foreground)] text-center">
-              Record created {{ formatDate(currentService.created_at) }}
-            </p>
+          <!-- Audit Trail Metadata -->
+          <div class="pt-3 border-t border-[var(--border)] space-y-2">
+            <div v-if="currentService.created_at" class="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Created {{ formatDate(currentService.created_at) }}</span>
+              <span v-if="currentService.updated_by" class="text-[var(--muted-foreground)]/70">by {{ currentService.updated_by }}</span>
+            </div>
+            
+            <div v-if="currentService.updated_at && currentService.updated_at !== currentService.created_at" 
+                 class="flex items-center justify-center gap-2 text-xs text-[var(--muted-foreground)]">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>Last edited {{ formatDate(currentService.updated_at) }}</span>
+              <span v-if="currentService.updated_by" class="text-[var(--muted-foreground)]/70">by {{ currentService.updated_by }}</span>
+            </div>
           </div>
 
           <!-- Bottom padding -->
@@ -428,11 +441,28 @@
                 </div>
               </div>
 
-              <!-- Metadata -->
-              <div v-if="currentService.created_at" class="p-4 bg-[var(--muted)]/20 border border-[var(--border)]" style="border-radius: 8px;">
-                <p class="text-xs text-[var(--muted-foreground)] text-center">
-                  Record created {{ formatDate(currentService.created_at) }}
-                </p>
+              <!-- Audit Trail Metadata -->
+              <div class="p-4 bg-[var(--muted)]/20 border border-[var(--border)] space-y-2" style="border-radius: 8px;">
+                <div v-if="currentService.created_at" class="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <div class="flex-1">
+                    <span>Created {{ formatDate(currentService.created_at) }}</span>
+                    <span v-if="currentService.updated_by" class="text-[var(--muted-foreground)]/70"> by {{ currentService.updated_by }}</span>
+                  </div>
+                </div>
+                
+                <div v-if="currentService.updated_at && currentService.updated_at !== currentService.created_at" 
+                     class="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <div class="flex-1">
+                    <span>Last edited {{ formatDate(currentService.updated_at) }}</span>
+                    <span v-if="currentService.updated_by" class="text-[var(--muted-foreground)]/70"> by {{ currentService.updated_by }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -497,28 +527,28 @@ const emit = defineEmits(['close', 'edit', 'viewJob'])
 
 const showFullHistory = ref(false)
 const showEditForm = ref(false)
-const currentService = ref({ ...props.service })
+const currentService = computed(() => props.service)
 
 // Job label mapping
 const jobLabels = {
   // Replace jobs
-  replace_evaporator_front: 'Evaporator Front',
-  replace_evaporator_rear: 'Evaporator Rear',
-  replace_condenser: 'Condenser',
-  replace_compressor: 'Compressor',
-  replace_blower_motor: 'Blower Motor',
-  replace_expansion_valve: 'Expansion Valve',
-  replace_pulley_assembly: 'Pulley Assembly',
-  replace_fan_motor: 'Fan Motor',
-  replace_suction_hose_assembly: 'Suction Hose Assembly',
-  replace_fan_belt: 'Fan Belt',
-  replace_filter_drier: 'Filter Drier',
-  replace_discharge_hose_suction: 'Discharge Hose Suction',
-  replace_ecv: 'ECV',
-  replace_oring: 'O-ring',
-  replace_radiator: 'Radiator',
-  replace_cabin_filter: 'Cabin Filter',
-  replace_magnetic: 'Magnetic',
+  replace_evaporator_front: 'Replace Evaporator Front',
+  replace_evaporator_rear: 'Replace Evaporator Rear',
+  replace_condenser: 'Replace Condenser',
+  replace_compressor: 'Replace Compressor',
+  replace_blower_motor: 'Replace Blower Motor',
+  replace_expansion_valve: 'Replace Expansion Valve',
+  replace_pulley_assembly: 'Replace Pulley Assembly',
+  replace_fan_motor: 'Replace Fan Motor',
+  replace_suction_hose_assembly: 'Replace Suction Hose Assembly',
+  replace_fan_belt: 'Replace Fan Belt',
+  replace_filter_drier: 'Replace Filter Drier',
+  replace_discharge_hose_suction: 'Replace Discharge Hose Suction',
+  replace_ecv: 'Replace ECV',
+  replace_oring: 'Replace O-ring',
+  replace_radiator: 'Replace Radiator',
+  replace_cabin_filter: 'Replace Cabin Filter',
+  replace_magnetic: 'Replace Magnetic',
   // Pulldown jobs
   pulldown_evaporator: 'Pulldown Evaporator',
   pulldown_condenser: 'Pulldown Condenser',
@@ -580,9 +610,6 @@ function handleEdit() {
 }
 
 function handleSave(serviceData) {
-  // Update the current service being viewed
-  currentService.value = { ...serviceData }
-  
   // Close the edit form
   showEditForm.value = false
   
@@ -591,8 +618,6 @@ function handleSave(serviceData) {
 }
 
 function viewJob(job) {
-  // Update the main view to show the selected job
-  currentService.value = { ...job }
   emit('viewJob', job)
 }
 

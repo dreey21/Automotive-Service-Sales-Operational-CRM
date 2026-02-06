@@ -488,6 +488,7 @@
       :service="selectedService"
       :show="showModal"
       :show-backdrop="true"
+      :existing-records="mockDatabase"
       :is-sidebar-collapsed="props.isSidebarCollapsed"
       @close="closeModal"
       @save="handleSave"
@@ -685,7 +686,7 @@ function getJobCount(plateNumber) {
 }
 
 function viewJobFromHistory(job) {
-  viewService.value = { ...job }
+  viewService.value = job 
 }
 
 function getMonthName(monthValue) {
@@ -915,6 +916,8 @@ function closeViewModal() {
 }
 
 function openEditModal(service) {
+  console.log('Opening edit modal with service:', service) // Debug log
+
   selectedService.value = { ...service }
   showModal.value = true
   showViewModal.value = false
@@ -922,16 +925,19 @@ function openEditModal(service) {
 }
 
 function handleEditFromView(service) {
+  console.log('Edit from view with service:', service) // Debug log
+  // Update the displayed services list
   const index = displayedServices.value.findIndex(s => s.id === service.id)
   if (index !== -1) {
     displayedServices.value[index] = { ...service }
   }
-
+  // Update the mock database
   const dbIndex = mockDatabase.findIndex(s => s.id === service.id)
   if (dbIndex !== -1) {
     mockDatabase[dbIndex] = { ...service }
   }
-
+  
+  // Update the view service to reflect changes
   viewService.value = { ...service }
 }
 

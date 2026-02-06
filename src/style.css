@@ -43,6 +43,11 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+/* Makes the default icon white/light */
+input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
 /* Re-enable scrollbars on desktop (768px and above) */
 @media (min-width: 768px) {
   * {

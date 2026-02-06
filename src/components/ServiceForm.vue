@@ -45,6 +45,7 @@
                 v-model="formData.plate_number"
                 type="text"
                 required
+                @input="handlePlateNumberInput"
                 class="w-full h-12 px-4 bg-[var(--muted)] border-2 border-[var(--border)] text-base text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:border-[var(--accent)] transition-all rounded-lg font-mono tracking-wider uppercase"
                 placeholder="ABC 1234"
               />
@@ -280,7 +281,7 @@
                   v-model="formData.service_date"
                   type="date"
                   required
-                  class="w-full h-12 px-4 bg-[var(--muted)] border-2 border-[var(--border)] text-base text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)] transition-all rounded-lg"
+                  class="w-full h-12 px-4 bg-[var(--muted)] border-2 border-[var(--border)] text-base text-white focus:outline-none focus:border-[var(--accent)] transition-all rounded-lg"
                 />
                 <p v-if="errors.service_date" class="text-xs text-red-500 mt-1">{{ errors.service_date }}</p>
               </div>
@@ -322,7 +323,7 @@
             <!-- Summary Card -->
             <div class="bg-[var(--muted)] border border-[var(--border)] rounded-lg p-4 space-y-3">
               <h3 class="text-sm font-bold text-[var(--foreground)] uppercase tracking-wide">Summary</h3>
-              <div class="space-y-2 text-sm">
+              <div class="space-y-3 text-sm">
                 <div class="flex justify-between">
                   <span class="text-[var(--muted-foreground)]">Plate Number</span>
                   <span class="text-[var(--foreground)] font-bold font-mono tracking-wider">{{ formData.plate_number || '—' }}</span>
@@ -331,11 +332,42 @@
                   <span class="text-[var(--muted-foreground)]">Mobile</span>
                   <span class="text-[var(--foreground)] font-medium">{{ formData.phone || '—' }}</span>
                 </div>
-                <div class="flex justify-between">
-                  <span class="text-[var(--muted-foreground)]">Services</span>
-                  <span class="text-[var(--accent)] font-bold">{{ formData.jobs_done.length }}</span>
+                
+                <!-- Services List -->
+                <div v-if="formData.jobs_done.length > 0" class="border-t border-[var(--border)] pt-3">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-[var(--muted-foreground)] font-semibold">Services</span>
+                    <span class="text-xs text-[var(--accent)] font-bold">{{ formData.jobs_done.length }} selected</span>
+                  </div>
+                  <div class="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
+                    <div
+                      v-for="job in formData.jobs_done"
+                      :key="job"
+                      class="flex items-start gap-2 text-xs"
+                    >
+                      <svg class="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <div class="flex-1">
+                        <span class="text-[var(--foreground)] font-medium">{{ getJobLabel(job) }}</span>
+                        <span v-if="isReplaceJob(job) && getPartType(job)" class="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide"
+                          :class="{
+                            'bg-green-500/20 text-green-400': getPartType(job) === 'brand_new',
+                            'bg-yellow-500/20 text-yellow-400': getPartType(job) === 'surplus',
+                            'bg-purple-500/20 text-purple-400': getPartType(job) === 'owner'
+                          }"
+                        >
+                          {{ getPartType(job) === 'brand_new' ? 'New' : getPartType(job) === 'surplus' ? 'Surplus' : 'Owner' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div class="border-t border-[var(--border)] pt-2 flex justify-between items-center">
+                <div v-else class="border-t border-[var(--border)] pt-3">
+                  <span class="text-[var(--muted-foreground)] text-xs italic">No services selected</span>
+                </div>
+                
+                <div class="border-t border-[var(--border)] pt-3 flex justify-between items-center">
                   <span class="text-[var(--foreground)] font-semibold">Total Cost</span>
                   <span class="text-xl font-extrabold text-blue-300 tabular-nums">₱{{ formData.cost.toFixed(2) }}</span>
                 </div>
@@ -622,6 +654,28 @@
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <!-- Auto-fill Toast Notification (Floating) -->
+    <transition
+      enter-active-class="transition ease-out duration-300"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <div
+        v-if="isAutoFilled"
+        class="fixed top-4 left-4 right-4 md:top-8 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[200] md:max-w-md"
+      >
+        <div class="flex items-start gap-3 p-4 bg-green-500/95 backdrop-blur-sm rounded-lg shadow-2xl border border-green-400/30">
+          <svg class="w-5 h-5 text-white shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p class="text-sm text-white font-semibold leading-relaxed">Customer info auto-filled from previous records</p>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -643,7 +697,8 @@ import {
 const props = defineProps({
   service: { type: Object, default: null },
   show: Boolean,
-  showBackdrop: { type: Boolean, default: true }
+  showBackdrop: { type: Boolean, default: true },
+  existingRecords: { type: Array, default: () => [] }
 })
 
 const emit = defineEmits(['close', 'save'])
@@ -667,6 +722,8 @@ const hasTouchMoved = ref(false)
 const showDiscardDialog = ref(false)
 const showClearServicesDialog = ref(false)
 const hasUnsavedChanges = ref(false)
+const isAutoFilled = ref(false)
+const initialFormSnapshot = ref(null)
 
 const formData = ref({
   customer_name: '',
@@ -686,26 +743,26 @@ const formData = ref({
 const selectedJobs = ref([])
 
 const jobLabels = {
-  replace_evaporator_front: 'Evaporator Front',
-  replace_evaporator_rear: 'Evaporator Rear',
-  replace_condenser: 'Condenser',
-  replace_compressor: 'Compressor',
-  replace_blower_motor: 'Blower Motor',
-  replace_expansion_valve: 'Expansion Valve',
-  replace_pulley_assembly: 'Pulley Assembly',
-  replace_fan_motor: 'Fan Motor',
-  replace_suction_hose_assembly: 'Suction Hose Assembly',
-  replace_fan_belt: 'Fan Belt',
-  replace_filter_drier: 'Filter Drier',
-  replace_discharge_hose_suction: 'Discharge Hose Suction',
-  replace_ecv: 'ECV',
-  replace_oring: 'O-ring',
-  replace_radiator: 'Radiator',
-  replace_cabin_filter: 'Cabin Filter',
-  replace_magnetic: 'Magnetic',
-  pulldown_evaporator: 'Evaporator',
-  pulldown_condenser: 'Condenser',
-  pulldown_compressor: 'Compressor',
+  replace_evaporator_front: 'Replace Evaporator Front',
+  replace_evaporator_rear: 'Replace Evaporator Rear',
+  replace_condenser: 'Replace Condenser',
+  replace_compressor: 'Replace Compressor',
+  replace_blower_motor: 'Replace Blower Motor',
+  replace_expansion_valve: 'Replace Expansion Valve',
+  replace_pulley_assembly: 'Replace Pulley Assembly',
+  replace_fan_motor: 'Replace Fan Motor',
+  replace_suction_hose_assembly: 'Replace Suction Hose Assembly',
+  replace_fan_belt: 'Replace Fan Belt',
+  replace_filter_drier: 'Replace Filter Drier',
+  replace_discharge_hose_suction: 'Replace Discharge Hose Suction',
+  replace_ecv: 'Replace ECV',
+  replace_oring: 'Replace O-ring',
+  replace_radiator: 'Replace Radiator',
+  replace_cabin_filter: 'Replace Cabin Filter',
+  replace_magnetic: 'Replace Magnetic',
+  pulldown_evaporator: 'Pulldown Evaporator',
+  pulldown_condenser: 'Pulldown Condenser',
+  pulldown_compressor: 'Pulldown Compressor',
   flushing_system: 'Flushing System',
   install_cabin_filter: 'Install Cabin Filter',
   cleaning: 'Cleaning',
@@ -750,6 +807,7 @@ const filteredPulldownJobs = computed(() => filterJobs(pulldownJobs))
 const filteredOtherJobs = computed(() => filterJobs(otherJobs))
 const allFilteredJobs = computed(() => [...filteredReplaceJobs.value, ...filteredPulldownJobs.value, ...filteredOtherJobs.value])
 
+
 function filterJobs(jobs) {
   if (!searchQuery.value) return jobs
   const query = searchQuery.value.toLowerCase()
@@ -775,20 +833,16 @@ function toggleJob(jobValue) {
   }
 }
 
-// NEW: Handle touch move - dismiss keyboard immediately when user tries to scroll
 function handleTouchMove(event) {
   if (!isMobile.value) return
   
-  // Clear existing timeout
   if (touchMoveTimeout.value) {
     clearTimeout(touchMoveTimeout.value)
   }
   
-  // Mark that touch has moved
   if (!hasTouchMoved.value) {
     hasTouchMoved.value = true
     
-    // Immediately blur any focused input
     const activeElement = document.activeElement
     if (activeElement && (
       activeElement.tagName === 'INPUT' || 
@@ -796,7 +850,6 @@ function handleTouchMove(event) {
     )) {
       activeElement.blur()
       
-      // Force blur by focusing on a different element temporarily
       const tempButton = document.createElement('button')
       tempButton.style.position = 'fixed'
       tempButton.style.top = '-9999px'
@@ -808,7 +861,6 @@ function handleTouchMove(event) {
     }
   }
   
-  // Reset the flag after a short delay
   touchMoveTimeout.value = setTimeout(() => {
     hasTouchMoved.value = false
   }, 300)
@@ -894,18 +946,32 @@ const canProceed = computed(() => {
   return false
 })
 
+function safeDeepClone(obj) {
+  if (!obj) return obj
+  
+  // Parse and stringify to create a deep copy
+  // This only works with JSON-serializable data
+  return JSON.parse(JSON.stringify(obj))
+}
+
 onMounted(() => {
   if (props.service) {
-    formData.value = { 
-      ...props.service,
-      owner_parts: props.service.owner_parts || {},
-      part_condition: props.service.part_condition || {}
-    }
+    // Use JSON-based deep clone (safer for this use case)
+    formData.value = safeDeepClone(props.service)
+    
+    // Ensure nested objects exist
+    if (!formData.value.jobs_done) formData.value.jobs_done = []
+    if (!formData.value.owner_parts) formData.value.owner_parts = {}
+    if (!formData.value.part_condition) formData.value.part_condition = {}
+    
     selectedJobs.value = [...formData.value.jobs_done]
     hasUnsavedChanges.value = false
+    
+    initialFormSnapshot.value = JSON.stringify(formData.value)
   } else {
     formData.value.service_date = new Date().toISOString().split('T')[0]
     hasUnsavedChanges.value = false
+    initialFormSnapshot.value = null
   }
   
   const handleResize = () => {
@@ -917,7 +983,6 @@ onMounted(() => {
   
   window.addEventListener('resize', handleResize)
   
-  // Cleanup on unmount
   onUnmounted(() => {
     window.removeEventListener('resize', handleResize)
     if (touchMoveTimeout.value) {
@@ -927,19 +992,63 @@ onMounted(() => {
 })
 
 watch(formData, () => {
-  const hasChanges = 
-    formData.value.plate_number !== '' ||
-    formData.value.customer_name !== '' ||
-    formData.value.phone !== '' ||
-    formData.value.car_model !== '' ||
-    formData.value.car_year !== '' ||
-    formData.value.invoice !== '' ||
-    formData.value.jobs_done.length > 0 ||
-    formData.value.cost !== 0 ||
-    formData.value.description !== ''
-  
-  hasUnsavedChanges.value = hasChanges
+  if (initialFormSnapshot.value) {
+    const currentSnapshot = JSON.stringify(formData.value)
+    hasUnsavedChanges.value = currentSnapshot !== initialFormSnapshot.value
+  } else {
+    const hasChanges = 
+      formData.value.plate_number !== '' ||
+      formData.value.customer_name !== '' ||
+      formData.value.phone !== '' ||
+      formData.value.car_model !== '' ||
+      formData.value.car_year !== '' ||
+      formData.value.invoice !== '' ||
+      formData.value.jobs_done.length > 0 ||
+      formData.value.cost !== 0 ||
+      formData.value.description !== ''
+    
+    hasUnsavedChanges.value = hasChanges
+  }
 }, { deep: true })
+
+function handlePlateNumberInput(event) {
+  const plateNumber = event.target.value
+  checkAndAutoFill(plateNumber)
+}
+
+function checkAndAutoFill(newPlateNumber) {
+  if (props.service) return
+  
+  if (!newPlateNumber || newPlateNumber.trim() === '') {
+    isAutoFilled.value = false
+    return
+  }
+  
+  const normalizedPlate = newPlateNumber.trim().toUpperCase()
+  
+  const existingRecord = props.existingRecords
+    .filter(record => record.plate_number.trim().toUpperCase() === normalizedPlate)
+    .sort((a, b) => new Date(b.service_date) - new Date(a.service_date))[0]
+  
+  if (existingRecord) {
+    formData.value.customer_name = existingRecord.customer_name || ''
+    formData.value.phone = existingRecord.phone || ''
+    formData.value.car_model = existingRecord.car_model || ''
+    formData.value.car_year = existingRecord.car_year || ''
+    
+    isAutoFilled.value = true
+    
+    setTimeout(() => {
+      isAutoFilled.value = false
+    }, 3000)
+  } else {
+    isAutoFilled.value = false
+  }
+}
+
+watch(() => formData.value.plate_number, (newPlateNumber) => {
+  checkAndAutoFill(newPlateNumber)
+})
 
 watch(selectedJobs, (newVal) => {
   formData.value.jobs_done = [...newVal]
@@ -1047,11 +1156,28 @@ function handleNext() {
   }
 }
 
+// Add audit trail metadata when saving
 function handleSubmit() {
   const dataToSave = { ...formData.value }
+  
+  // Get current timestamp in ISO format
+  const now = new Date().toISOString().split('T')[0]
+  
   if (props.service?.id) {
+    // Editing existing record
     dataToSave.id = props.service.id
+    // Preserve created_at from original service
+    dataToSave.created_at = props.service.created_at
+    // Update the updated_at and updated_by fields
+    dataToSave.updated_at = now
+    dataToSave.updated_by = 'admin'
+  } else {
+    // Creating new record
+    dataToSave.created_at = now
+    dataToSave.updated_at = now
+    dataToSave.updated_by = 'admin'
   }
+  
   emit('save', dataToSave)
   close()
 }
@@ -1074,6 +1200,26 @@ function close() {
   errors.value = {}
   isServicesExpanded.value = false
   hasUnsavedChanges.value = false
+  initialFormSnapshot.value = null
+  
+  // Reset formData
+  formData.value = {
+    customer_name: '',
+    phone: '',
+    car_model: '',
+    car_year: '',
+    invoice: '',
+    plate_number: '',
+    jobs_done: [],
+    owner_parts: {},
+    part_condition: {},
+    service_date: '',
+    cost: 0,
+    description: ''
+  }
+  
+  selectedJobs.value = []
+  
   emit('close')
 }
 </script>
@@ -1096,14 +1242,13 @@ function close() {
   transform: scale(0.98);
 }
 
-/* Hide scrollbar but keep functionality */
 .scrollbar-hidden {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .scrollbar-hidden::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
+  display: none;
 }
 
 @media (max-width: 767px) {
