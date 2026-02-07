@@ -90,25 +90,25 @@ input::-webkit-calendar-picker-indicator {
     --foreground: #F2F0EF;
     --muted: #1A1A24;
     --muted-foreground: #71717A;
-    --accent: #F59E0B;  /* Changed back to your original yellow/amber */
+    --accent: #F59E0B;  /* Your original yellow/amber */
     --accent-foreground: #0A0A0F;
     --accent-muted: rgba(245, 158, 11, 0.15);
     --border: rgba(255, 255, 255, 0.08);
     --border-hover: rgba(255, 255, 255, 0.15);
     --card: rgba(26, 26, 36, 0.6);
     --card-solid: #1A1A24;
-    --ring: #F59E0B;  /* Changed back to yellow/amber */
+    --ring: #F59E0B;  /* Yellow/amber */
     --secondary: #7DF9FF;
     --secondary-foreground: #0f172a;
     
-    /* Shadcn compatibility */
+    /* Shadcn compatibility - FIXED: primary should be visible against dark background */
     --popover: #1A1A24;
     --popover-foreground: #FAFAFA;
-    --primary: #0A0A0F;
-    --primary-foreground: #FAFAFA;
+    --primary: #F59E0B;  /* Changed to amber/yellow so buttons are visible */
+    --primary-foreground: #0A0A0F;  /* Dark text on yellow button */
     --destructive: #ef4444;
     --destructive-foreground: #FAFAFA;
-    --input: rgba(255, 255, 255, 0.08);
+    --input: rgba(255, 255, 255, 0.15);  /* Increased opacity for better visibility */
     --radius: 0.5rem;
     
     --chart-1: 12 76% 61%;
@@ -122,6 +122,9 @@ input::-webkit-calendar-picker-indicator {
 @layer base {
   * {
     @apply border-border;
+  }
+  html {
+    @apply bg-background;
   }
   body {
     @apply bg-background text-foreground;

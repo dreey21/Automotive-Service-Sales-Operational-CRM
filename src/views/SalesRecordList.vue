@@ -7,7 +7,12 @@
           Recent Transactions
         </h2>
         <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
-          {{ filteredServices.length }} record{{ filteredServices.length !== 1 ? 's' : '' }}
+          <span v-if="debouncedSearchQuery || selectedMonth || selectedYear">
+            {{ totalResults }} result{{ totalResults !== 1 ? 's' : '' }} found
+          </span>
+          <span v-else>
+            {{ totalResults }} total record{{ totalResults !== 1 ? 's' : '' }}
+          </span>
         </p>
       </div>
       
@@ -145,38 +150,53 @@
       </button>
     </div>
 
-    <!-- Scrollable Area -->
-    <div class="h-[calc(100vh-380px)] md:h-[calc(100vh-340px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
-      <!-- Error State -->
-      <div v-if="error" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm" style="border-radius: 6px;">
-        {{ error }}
-      </div>
+    <!-- Error State -->
+    <div v-if="error" class="mb-4 p-3 bg-red-500/10 border border-red-500/30 text-red-400 text-sm" style="border-radius: 6px;">
+      {{ error }}
+    </div>
 
-      <!-- ─── LOADING SKELETONS ─── -->
-      <template v-if="initialLoading">
-        <!-- Mobile skeleton (cards) -->
-        <div class="md:hidden space-y-2">
+    <!-- ─── LOADING SKELETONS ─── -->
+    <template v-if="initialLoading">
+      <!-- Mobile skeleton (cards) - Account for bottom nav (64px) + safe padding (16px) = 80px total -->
+      <div class="md:hidden h-[calc(100vh-450px)] pb-20 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent">
+        <div class="space-y-2">
           <div
             v-for="i in 8"
             :key="`skel-card-${i}`"
-            class="bg-[var(--card)] border border-[var(--border)] p-3 animate-pulse"
+            class="bg-[var(--card)] border border-[var(--border)] p-2.5 animate-pulse"
             style="border-radius: 6px;"
           >
-            <div class="flex items-start justify-between mb-2">
+            <!-- Ultra compact skeleton matching new rendered design -->
+            <div class="flex items-baseline justify-between mb-1">
               <div class="h-4 bg-[var(--muted)] w-1/3" style="border-radius: 3px;"></div>
-              <div class="h-5 bg-[var(--muted)] w-1/4" style="border-radius: 3px;"></div>
+              <div class="h-3 bg-[var(--muted)] w-16" style="border-radius: 3px;"></div>
             </div>
-            <div class="h-3 bg-[var(--muted)] w-2/3 mb-1.5" style="border-radius: 3px;"></div>
-            <div class="h-3 bg-[var(--muted)] w-1/2" style="border-radius: 3px;"></div>
+            <div class="h-3 bg-[var(--muted)] w-2/3 mb-1" style="border-radius: 3px;"></div>
+            <div class="flex items-center justify-between">
+              <div class="h-3 bg-[var(--muted)] w-1/2" style="border-radius: 3px;"></div>
+              <div class="h-4 bg-[var(--muted)] w-20" style="border-radius: 3px;"></div>
+            </div>
           </div>
         </div>
+      </div>
 
-        <!-- Desktop skeleton (table rows) -->
-        <div class="hidden md:block bg-[var(--card)] border border-[var(--border)] overflow-hidden" style="border-radius: 6px;">
-          <table class="w-full">
+      <!-- Desktop skeleton (table) -->
+      <div class="hidden md:block h-[calc(100vh-410px)] bg-[var(--card)] border border-[var(--border)]" style="border-radius: 6px;">
+        <!-- Table Header -->
+        <div class="border-b border-[var(--border)] bg-[var(--card-solid)]">
+          <table class="w-full border-collapse table-fixed">
+            <colgroup>
+              <col style="width: 200px;">
+              <col style="width: 140px;">
+              <col style="width: auto;">
+              <col style="width: 180px;">
+              <col style="width: 140px;">
+              <col style="width: 180px;">
+              <col style="width: 48px;">
+            </colgroup>
             <thead>
-              <tr class="border-b border-[var(--border)] bg-[var(--muted)]/40">
-                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
+              <tr>
+                <th class="h-10 pl-10 pr-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
@@ -185,301 +205,446 @@
                 <th class="h-10 w-[48px]"></th>
               </tr>
             </thead>
+          </table>
+        </div>
+        
+        <!-- Scrollable Table Body -->
+        <div class="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent" style="height: calc(100% - 40px);">
+          <table class="w-full border-collapse table-fixed">
+            <colgroup>
+              <col style="width: 200px;">
+              <col style="width: 140px;">
+              <col style="width: auto;">
+              <col style="width: 180px;">
+              <col style="width: 140px;">
+              <col style="width: 180px;">
+              <col style="width: 48px;">
+            </colgroup>
             <tbody>
               <tr v-for="i in 10" :key="`skel-row-${i}`" class="border-b border-[var(--border)] animate-pulse">
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[70px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[70px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[90px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[120px]" style="border-radius: 3px;"></div></td>
-                <td class="px-4 py-4"><div class="h-3.5 bg-[var(--muted)] w-[90px]" style="border-radius: 3px;"></div></td>
-                <td class="px-2 py-4"><div class="h-3.5 bg-[var(--muted)] w-[18px] mx-auto" style="border-radius: 3px;"></div></td>
+                <!-- Plate Number with icon space -->
+                <td class="px-4 py-2">
+                  <div class="flex items-center gap-2">
+                    <div class="w-4 h-4 flex-shrink-0"></div>
+                    <div class="h-3.5 bg-[var(--muted)] w-[70px]" style="border-radius: 3px;"></div>
+                  </div>
+                </td>
+                <!-- Date -->
+                <td class="px-4 py-2"><div class="h-3.5 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
+                <!-- Jobs Done -->
+                <td class="px-4 py-2"><div class="h-3.5 bg-[var(--muted)] w-[120px]" style="border-radius: 3px;"></div></td>
+                <!-- Part Details - badge skeletons -->
+                <td class="px-4 py-2">
+                  <div class="flex flex-wrap gap-1">
+                    <div class="h-5 bg-[var(--muted)] w-[70px]" style="border-radius: 3px;"></div>
+                    <div class="h-5 bg-[var(--muted)] w-[60px]" style="border-radius: 3px;"></div>
+                  </div>
+                </td>
+                <!-- Cost -->
+                <td class="px-4 py-2"><div class="h-4 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
+                <!-- Vehicle -->
+                <td class="px-4 py-2"><div class="h-3.5 bg-[var(--muted)] w-[90px]" style="border-radius: 3px;"></div></td>
+                <!-- Actions -->
+                <td class="px-2 py-2">
+                  <div class="p-1.5">
+                    <div class="h-[18px] bg-[var(--muted)] w-[18px] mx-auto" style="border-radius: 3px;"></div>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </template>
-
-      <!-- EMPTY STATE (shared) -->
-      <div v-else-if="filteredServices.length === 0" class="text-center py-20 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 6px;">
-        <svg class="w-14 h-14 mx-auto mb-4 text-[var(--muted-foreground)] opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <p class="text-[var(--foreground)] font-medium mb-1">
-          {{ searchQuery || selectedMonth || selectedYear ? 'No matching records' : 'No sales records' }}
-        </p>
-        <p class="text-[var(--muted-foreground)] text-sm">
-          {{ searchQuery || selectedMonth || selectedYear ? 'Try adjusting your filters' : 'Tap "Add Record" to create your first entry' }}
-        </p>
       </div>
+    </template>
 
-      <!-- RECORDS: MOBILE CARDS + DESKTOP TABLE -->
-      <template v-else>
-      <!-- Mobile: Card List -->
-      <div class="md:hidden space-y-2">
-        <div
-          v-for="service in filteredServices"
-          :key="`card-${service.id}`"
-          class="relative bg-[var(--card)] border border-[var(--border)] p-3 hover:border-[var(--accent)]/60 hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
-          style="border-radius: 6px;"
-          @click="openViewModal(service)"
-        >
-          <!-- Loading Overlay -->
-          <div v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" style="border-radius: 6px;">
-            <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-          </div>
+    <!-- EMPTY STATE (shared) -->
+    <div v-else-if="paginatedServices.length === 0" class="text-center py-20 bg-[var(--card)] border border-[var(--border)]" style="border-radius: 6px;">
+      <svg class="w-14 h-14 mx-auto mb-4 text-[var(--muted-foreground)] opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <p class="text-[var(--foreground)] font-medium mb-1">
+        {{ debouncedSearchQuery || selectedMonth || selectedYear ? 'No matching records' : 'No sales records' }}
+      </p>
+      <p class="text-[var(--muted-foreground)] text-sm">
+        {{ debouncedSearchQuery || selectedMonth || selectedYear ? 'Try adjusting your filters' : 'Tap "Add Record" to create your first entry' }}
+      </p>
+    </div>
 
-          <!-- Click Hint Icon -->
-          <div class="absolute top-2.5 left-2.5 opacity-0 group-hover:opacity-40 transition-opacity">
-            <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-            </svg>
-          </div>
-
-          <!-- Menu Button -->
-          <button
-            @click.stop="toggleMenu(service.id)"
-            class="absolute top-2.5 right-2.5 p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]/50 transition-colors z-10"
-            style="border-radius: 4px;"
-          >
-            <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-          </button>
-
-          <!-- Dropdown Menu -->
+    <!-- RECORDS: MOBILE CARDS + DESKTOP TABLE -->
+    <template v-else>
+      <!-- Mobile: Card List - Pagination inside scrollable area, bottom nav padding at the very end -->
+      <div class="md:hidden h-[calc(100vh-450px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent" ref="mobileScrollContainerRef">
+        <div class="space-y-2">
           <div
-            v-if="openMenuId === service.id"
-            class="absolute top-10 right-2.5 bg-[var(--card)] border border-[var(--border)] shadow-lg overflow-hidden z-20 min-w-[150px]"
+            v-for="service in paginatedServices"
+            :key="`card-${service.id}`"
+            class="relative bg-[var(--card)] border border-[var(--border)] p-2.5 hover:border-[var(--accent)]/60 hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
             style="border-radius: 6px;"
-            @click.stop
+            @click="openViewModal(service)"
           >
+            <!-- Loading Overlay -->
+            <div v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" style="border-radius: 6px;">
+              <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <!-- Click Hint Icon -->
+            <div class="absolute top-2 left-2 opacity-0 group-hover:opacity-40 transition-opacity">
+              <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+
+            <!-- Menu Button -->
             <button
-              @click="openEditModal(service)"
-              class="w-full px-3 py-2.5 text-left text-sm text-[var(--foreground)] hover:bg-[var(--muted)]/70 transition-colors flex items-center gap-2.5"
+              @click.stop="toggleMenu(service.id)"
+              class="absolute top-2 right-2 p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]/50 transition-colors z-10"
+              style="border-radius: 4px;"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
               </svg>
-              Edit
             </button>
-            <div class="border-t border-[var(--border)]"></div>
-            <button
-              @click="deleteService(service.id)"
-              class="w-full px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2.5"
+
+            <!-- Dropdown Menu -->
+            <div
+              v-if="openMenuId === service.id"
+              class="absolute top-9 right-2 bg-[var(--card)] border border-[var(--border)] shadow-lg overflow-hidden z-20 min-w-[150px]"
+              style="border-radius: 6px;"
+              @click.stop
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete
-            </button>
-          </div>
-
-          <!-- Card Content -->
-          <div class="pr-8">
-            <!-- Primary: Plate Number + Date -->
-            <div class="flex items-baseline justify-between mb-2">
-              <h3 class="text-base font-extrabold text-[var(--foreground)] truncate flex-1 leading-tight font-mono tracking-wider">
-                {{ service.plate_number || 'Walk-in' }}
-                <span v-if="hasJobHistory(service.plate_number)" class="ml-1.5 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium tracking-normal">
-                  {{ getJobCount(service.plate_number) }} Records
-                </span>
-              </h3>
-              <span class="text-sm font-bold text-[var(--accent)] flex-shrink-0">{{ formatDate(service.service_date) }}</span>
+              <button
+                @click="openEditModal(service)"
+                class="w-full px-3 py-2.5 text-left text-sm text-[var(--foreground)] hover:bg-[var(--muted)]/70 transition-colors flex items-center gap-2.5"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+              <div class="border-t border-[var(--border)]"></div>
+              <button
+                @click="deleteService(service.id)"
+                class="w-full px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2.5"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete
+              </button>
             </div>
 
-            <!-- Secondary: Jobs Done -->
-            <div class="flex items-center gap-1.5 mb-2 text-[13px]">
-              <svg class="w-3.5 h-3.5 flex-shrink-0 text-[var(--muted-foreground)] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span class="truncate font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
-            </div>
+            <!-- Card Content - ULTRA COMPACT DESIGN -->
+            <div class="pr-7">
+              <!-- Row 1: Plate Number + Date only -->
+              <div class="flex items-baseline justify-between mb-1">
+                <h3 class="text-[15px] font-extrabold text-[var(--foreground)] truncate flex-1 leading-tight font-mono tracking-wider">
+                  {{ service.plate_number || 'Walk-in' }}
+                  <span v-if="hasJobHistory(service.plate_number)" class="ml-1.5 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium tracking-normal">
+                    {{ getJobCount(service.plate_number) }} Records
+                  </span>
+                </h3>
+                <span class="text-xs font-bold text-[var(--muted-foreground)] flex-shrink-0">{{ formatDate(service.service_date) }}</span>
+              </div>
 
-            <!-- Part Details badges -->
-            <div v-if="hasPartConditions(service)" class="mb-2 flex flex-wrap gap-1">
-              <span v-for="(condition, job) in getPartDetailsSummary(service)" :key="job" :class="[
-                'text-[10px] px-1.5 py-0.5 rounded font-medium',
-                condition === 'Brand New' ? 'bg-green-500/20 text-green-400' :
-                condition === 'Surplus' ? 'bg-yellow-500/20 text-yellow-400' :
-                'bg-purple-500/20 text-purple-400'
-              ]">
-                {{ condition }}
-              </span>
-            </div>
+              <!-- Row 2: Jobs Done -->
+              <div class="flex items-center gap-1.5 mb-1 text-xs">
+                <svg class="w-3.5 h-3.5 flex-shrink-0 text-[var(--muted-foreground)] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span class="truncate font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
+              </div>
 
-            <!-- Tertiary: Cost -->
-            <div class="mb-2">
-              <span class="text-lg font-extrabold text-blue-300 tabular-nums">₱{{ service.cost.toFixed(2) }}</span>
-            </div>
+              <!-- Row 3: Part Details badges (if any) -->
+              <div v-if="hasPartConditions(service)" class="mb-1 flex flex-wrap gap-1">
+                <template v-if="getPartDetailsDisplay(service, 2).visible.length > 0">
+                  <span 
+                    v-for="([job, condition], index) in getPartDetailsDisplay(service, 2).visible" 
+                    :key="job" 
+                    :class="[
+                      'text-[10px] px-1.5 py-0.5 rounded font-medium',
+                      condition === 'Brand New' ? 'bg-green-500/20 text-green-400' :
+                      condition === 'Surplus' ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-purple-500/20 text-purple-400'
+                    ]"
+                  >
+                    {{ condition }}
+                  </span>
+                  <span 
+                    v-if="getPartDetailsDisplay(service, 2).remaining > 0" 
+                    class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[var(--muted)] text-[var(--muted-foreground)]"
+                  >
+                    +{{ getPartDetailsDisplay(service, 2).remaining }} more
+                  </span>
+                </template>
+              </div>
 
-            <!-- Quaternary: Vehicle Model + Customer -->
-            <div class="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
-              <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0h.01M15 17a2 2 0 104 0m-4 0h.01M17 16h.01" />
-              </svg>
-              <span class="truncate">
-                <span v-if="service.car_model" class="font-semibold">{{ service.car_model }}</span>
-                <span v-else class="italic opacity-60">No vehicle</span>
-                <span v-if="service.car_model && service.customer_name" class="opacity-100 mx-1">·</span>
-                <span v-if="service.customer_name" class="opacity-75">{{ service.customer_name }}</span>
-              </span>
+              <!-- Row 4: Vehicle Model + Customer + Price on right -->
+              <div class="flex items-center justify-between gap-2 text-xs text-[var(--muted-foreground)]">
+                <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                  <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0h.01M15 17a2 2 0 104 0m-4 0h.01M17 16h.01" />
+                  </svg>
+                  <span class="truncate">
+                    <span v-if="service.car_model" class="font-semibold">{{ service.car_model }}</span>
+                    <span v-else class="italic opacity-60">No vehicle</span>
+                    <span v-if="service.car_model && service.customer_name" class="opacity-100 mx-1">·</span>
+                    <span v-if="service.customer_name" class="opacity-75">{{ service.customer_name }}</span>
+                  </span>
+                </div>
+                <span class="text-base font-extrabold text-green-600 tabular-nums flex-shrink-0">₱{{ service.cost.toFixed(2) }}</span>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Mobile Pagination - Inside scrollable container, at the bottom of the list -->
+        <div v-if="totalPages > 1" class="mt-4 pb-20 flex flex-col items-center gap-4">
+          <!-- Results info -->
+          <div class="text-sm text-[var(--muted-foreground)]">
+            Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, totalResults) }} of {{ totalResults }} results
+          </div>
+
+          <!-- Pagination -->
+          <Pagination
+            v-slot="{ page }"
+            :total="totalResults"
+            :items-per-page="ITEMS_PER_PAGE"
+            :sibling-count="1"
+            :show-edges="true"
+            v-model:page="currentPage"
+          >
+            <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+              <PaginationFirst />
+              <PaginationPrev />
+
+              <template v-for="(item, index) in items">
+                <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
+                  <Button
+                    class="w-9 h-9 p-0"
+                    :variant="item.value === page ? 'default' : 'outline'"
+                  >
+                    {{ item.value }}
+                  </Button>
+                </PaginationListItem>
+                <PaginationEllipsis v-else :key="item.type" :index="index" />
+              </template>
+
+              <PaginationNext />
+              <PaginationLast />
+            </PaginationList>
+          </Pagination>
+        </div>
       </div>
 
-      <!-- Desktop: Table -->
-      <div class="hidden md:block bg-[var(--card)] border border-[var(--border)] overflow-hidden" style="border-radius: 6px;">
-        <table class="w-full border-collapse">
-          <thead>
-            <tr class="border-b border-[var(--border)] bg-[var(--muted)]/40">
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
-              <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
-              <th class="h-10 w-[48px]"></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="service in filteredServices"
-              :key="`row-${service.id}`"
-              class="relative border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--muted)]/40 hover:shadow-sm transition-all cursor-pointer group"
-              @click="openViewModal(service)"
-            >
-              <!-- Loading Overlay -->
-              <td v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" colspan="7">
-                <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-              </td>
+      <!-- Desktop: Table with Separated Sticky Header -->
+      <div class="hidden md:block h-[calc(100vh-410px)] bg-[var(--card)] border border-[var(--border)]" style="border-radius: 6px;">
+        <!-- Sticky Table Header -->
+        <div class="border-b border-[var(--border)] bg-[var(--card-solid)]">
+          <table class="w-full border-collapse table-fixed">
+            <colgroup>
+              <col style="width: 200px;">
+              <col style="width: 140px;">
+              <col style="width: auto;">
+              <col style="width: 180px;">
+              <col style="width: 140px;">
+              <col style="width: 180px;">
+              <col style="width: 48px;">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="h-10 pl-10 pr-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
+                <th class="h-10 w-[48px]"></th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+        
+        <!-- Scrollable Table Body -->
+        <div 
+          ref="desktopScrollContainerRef"
+          class="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent" 
+          style="height: calc(100% - 40px);"
+        >
+          <table class="w-full border-collapse table-fixed">
+            <colgroup>
+              <col style="width: 200px;">
+              <col style="width: 140px;">
+              <col style="width: auto;">
+              <col style="width: 180px;">
+              <col style="width: 140px;">
+              <col style="width: 180px;">
+              <col style="width: 48px;">
+            </colgroup>
+            <tbody>
+              <tr
+                v-for="service in paginatedServices"
+                :key="`row-${service.id}`"
+                class="relative border-b border-[var(--border)] last:border-b-0 hover:bg-[var(--accent)]/5 hover:border-[var(--accent)]/30 transition-all duration-200 cursor-pointer group"
+                @click="openViewModal(service)"
+              >
+                <!-- Loading Overlay -->
+                <td v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" colspan="7">
+                  <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+                </td>
 
-              <!-- Plate Number -->
-              <td class="px-4 py-3 group-hover:scale-[1.01] transition-transform">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-[var(--accent)] opacity-0 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <div>
-                    <span class="text-sm font-extrabold text-[var(--foreground)] tracking-wider">
-                      {{ service.plate_number || '—' }}
-                    </span>
-                    <span v-if="hasJobHistory(service.plate_number)" class="ml-1.5 text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium">
-                      {{ getJobCount(service.plate_number) }} Records
-                    </span>
-                  </div>
-                </div>
-              </td>
-
-              <!-- Date -->
-              <td class="px-4 py-3">
-                <span class="text-sm font-bold text-[var(--accent)]">{{ formatDate(service.service_date) }}</span>
-              </td>
-
-              <!-- Jobs Done -->
-              <td class="px-4 py-3">
-                <span class="text-sm font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
-              </td>
-              
-              <!-- Part Details -->
-              <td class="px-4 py-3">
-                <div v-if="hasPartConditions(service)" class="flex flex-wrap gap-1">
-                  <span v-for="(condition, job) in getPartDetailsSummary(service)" :key="job" :class="[
-                    'text-[10px] px-2 py-0.5 rounded font-medium whitespace-nowrap',
-                    condition === 'Brand New' ? 'bg-green-500/20 text-green-400' :
-                    condition === 'Surplus' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-purple-500/20 text-purple-400'
-                  ]">
-                    {{ condition }}
-                  </span>
-                </div>
-                <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
-              </td>
-
-              <!-- Cost -->
-              <td class="px-4 py-3">
-                <span class="text-base font-extrabold text-blue-300 tabular-nums">₱{{ service.cost.toFixed(2) }}</span>
-              </td>
-
-              <!-- Car Model -->
-              <td class="px-4 py-3">
-                <span v-if="service.car_model" class="text-sm font-semibold text-[var(--foreground)]">{{ service.car_model }}</span>
-                <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
-              </td>
-
-              <!-- Row Actions -->
-              <td class="px-2 py-3" @click.stop>
-                <div class="relative">
-                  <button
-                    @click="toggleMenu(service.id)"
-                    class="p-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]/50 transition-colors"
-                    style="border-radius: 4px;"
-                  >
-                    <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                <!-- Plate Number -->
+                <td class="px-4 py-2 transition-transform duration-200">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0 text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
-                  </button>
-
-                  <!-- Row Dropdown Menu -->
-                  <div
-                    v-if="openMenuId === service.id"
-                    class="absolute top-full right-0 mt-1 bg-[var(--card)] border border-[var(--border)] shadow-lg overflow-hidden z-20 min-w-[150px]"
-                    style="border-radius: 6px;"
-                    @click.stop
-                  >
-                    <button
-                      @click="openEditModal(service)"
-                      class="w-full px-3 py-2.5 text-left text-sm text-[var(--foreground)] hover:bg-[var(--muted)]/70 transition-colors flex items-center gap-2.5"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit
-                    </button>
-                    <div class="border-t border-[var(--border)]"></div>
-                    <button
-                      @click="deleteService(service.id)"
-                      class="w-full px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2.5"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Delete
-                    </button>
+                    <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                      <span class="text-sm font-extrabold text-[var(--foreground)] tracking-wider whitespace-nowrap group-hover:text-[var(--accent)] transition-colors duration-200">
+                        {{ service.plate_number || '—' }}
+                      </span>
+                      <span v-if="hasJobHistory(service.plate_number)" class="text-[10px] px-1.5 py-0.5 bg-blue-500/20 text-blue-400 rounded font-sans font-medium whitespace-nowrap flex-shrink-0">
+                        {{ getJobCount(service.plate_number) }} Records
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </td>
+
+                <!-- Date -->
+                <td class="px-4 py-2">
+                  <span class="text-sm font-bold text-[var(--muted-foreground)]">{{ formatDate(service.service_date) }}</span>
+                </td>
+
+                <!-- Jobs Done -->
+                <td class="px-4 py-2">
+                  <span class="text-sm font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
+                </td>
+                
+                <!-- Part Details -->
+                <td class="px-4 py-2">
+                  <div v-if="hasPartConditions(service)" class="flex flex-wrap gap-1">
+                    <template v-if="getPartDetailsDisplay(service, 3).visible.length > 0">
+                      <span 
+                        v-for="([job, condition], index) in getPartDetailsDisplay(service, 3).visible" 
+                        :key="job" 
+                        :class="[
+                          'text-[10px] px-2 py-0.5 rounded font-medium whitespace-nowrap',
+                          condition === 'Brand New' ? 'bg-green-500/20 text-green-400' :
+                          condition === 'Surplus' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-purple-500/20 text-purple-400'
+                        ]"
+                      >
+                        {{ condition }}
+                      </span>
+                      <span 
+                        v-if="getPartDetailsDisplay(service, 3).remaining > 0" 
+                        class="text-[10px] px-2 py-0.5 rounded font-medium whitespace-nowrap bg-[var(--muted)] text-[var(--muted-foreground)]"
+                      >
+                        +{{ getPartDetailsDisplay(service, 3).remaining }} more
+                      </span>
+                    </template>
+                  </div>
+                  <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
+                </td>
+
+                <!-- Cost -->
+                <td class="px-4 py-2">
+                  <span class="text-base font-extrabold text-green-600 tabular-nums">₱{{ service.cost.toFixed(2) }}</span>
+                </td>
+
+                <!-- Car Model -->
+                <td class="px-4 py-2">
+                  <span v-if="service.car_model" class="text-sm font-semibold text-[var(--foreground)]">{{ service.car_model }}</span>
+                  <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
+                </td>
+
+                <!-- Row Actions -->
+                <td class="px-2 py-2" @click.stop>
+                  <div class="relative">
+                    <button
+                      @click="toggleMenu(service.id)"
+                      class="p-1.5 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]/50 transition-colors"
+                      style="border-radius: 4px;"
+                    >
+                      <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+                      </svg>
+                    </button>
+
+                    <!-- Row Dropdown Menu -->
+                    <div
+                      v-if="openMenuId === service.id"
+                      class="absolute top-full right-0 mt-1 bg-[var(--card)] border border-[var(--border)] shadow-lg overflow-hidden z-20 min-w-[150px]"
+                      style="border-radius: 6px;"
+                      @click.stop
+                    >
+                      <button
+                        @click="openEditModal(service)"
+                        class="w-full px-3 py-2.5 text-left text-sm text-[var(--foreground)] hover:bg-[var(--muted)]/70 transition-colors flex items-center gap-2.5"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        Edit
+                      </button>
+                      <div class="border-t border-[var(--border)]"></div>
+                      <button
+                        @click="deleteService(service.id)"
+                        class="w-full px-3 py-2.5 text-left text-sm text-red-500 hover:bg-red-500/10 transition-colors flex items-center gap-2.5"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      </template>
+    </template>
 
-      <!-- Loading More -->
-      <div v-if="loadingMore" class="mt-4 text-center py-4">
-        <div class="inline-block w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
+    <!-- Pagination Controls - Desktop Only (Mobile has it inside scroll container) -->
+    <div v-if="totalPages > 1" class="hidden md:flex mt-4 flex-col sm:flex-row items-center justify-between gap-4">
+      <!-- Results info -->
+      <div class="text-sm text-[var(--muted-foreground)]">
+        Showing {{ startIndex + 1 }} to {{ Math.min(endIndex, totalResults) }} of {{ totalResults }} results
       </div>
 
-      <!-- Intersection Observer target -->
-      <div ref="observerTarget" class="h-10"></div>
+      <!-- Pagination -->
+      <Pagination
+        v-slot="{ page }"
+        :total="totalResults"
+        :items-per-page="ITEMS_PER_PAGE"
+        :sibling-count="1"
+        :show-edges="true"
+        v-model:page="currentPage"
+      >
+        <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+          <PaginationFirst />
+          <PaginationPrev />
 
-      <!-- Limit Message -->
-      <div v-if="limitReached && !searchQuery && !selectedMonth && !selectedYear && filteredServices.length > 0" class="mt-4 text-center py-3 bg-[var(--card)] border border-[var(--border)] text-xs text-[var(--muted-foreground)]" style="border-radius: 6px;">
-        Showing {{ filteredServices.length }} recent records · Use search to find older entries
-      </div>
+          <template v-for="(item, index) in items">
+            <PaginationListItem v-if="item.type === 'page'" :key="index" :value="item.value" as-child>
+              <Button
+                class="w-9 h-9 p-0"
+                :variant="item.value === page ? 'default' : 'outline'"
+              >
+                {{ item.value }}
+              </Button>
+            </PaginationListItem>
+            <PaginationEllipsis v-else :key="item.type" :index="index" />
+          </template>
 
-      <!-- Footer -->
-      <footer v-if="limitReached && !searchQuery && !selectedMonth && !selectedYear && filteredServices.length > 0" class="hidden md:block mt-8 pt-6 border-t border-[var(--border)] text-center">
-        <p class="text-xs text-[var(--muted-foreground)]">
-          © 2020 4DM Auto Care Center. All rights reserved.
-        </p>
-      </footer>
-
-      <div class="h-4"></div>
+          <PaginationNext />
+          <PaginationLast />
+        </PaginationList>
+      </Pagination>
     </div>
 
     <!-- ─── MODALS ─── -->
@@ -504,6 +669,33 @@
       @edit="handleEditFromView"
       @view-job="viewJobFromHistory"
     />
+
+    <!-- Toast Notification -->
+    <ToastNotification
+      :show="showToast"
+      :message="toastMessage"
+      :variant="toastVariant"
+      :duration="3000"
+      @close="showToast = false"
+    />
+
+    <!-- Delete Confirmation Dialog -->
+    <AlertDialog v-model:open="showDeleteDialog">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Delete this record?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the sales record from the database.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction @click="confirmDelete">
+            Delete Record
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
 
@@ -511,6 +703,28 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import ServiceForm from '../components/ServiceForm.vue'
 import ViewDetailsModal from '../components/ViewDetailsModal.vue'
+import ToastNotification from '../components/ToastNotification.vue'
+import {
+  Pagination,
+  PaginationEllipsis,
+  PaginationFirst,
+  PaginationLast,
+  PaginationList,
+  PaginationListItem,
+  PaginationNext,
+  PaginationPrev,
+} from '@/components/ui/pagination'
+import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { mockDatabase } from '../data/mockData.js'
 
 const props = defineProps({
@@ -520,32 +734,35 @@ const props = defineProps({
   }
 })
 
-const MAX_ITEMS_IN_VIEW = 50
-const ITEMS_PER_LOAD = 10
-
-const displayedServices = ref([])
+const ITEMS_PER_PAGE = 50
+const mobileScrollContainerRef = ref(null)
+const desktopScrollContainerRef = ref(null)
 const initialLoading = ref(true)
-const loadingMore = ref(false)
 const showModal = ref(false)
 const showViewModal = ref(false)
 const selectedService = ref(null)
 const viewService = ref(null)
 const searchQuery = ref('')
+const debouncedSearchQuery = ref('') // This is what actually triggers the filter
 const openMenuId = ref(null)
-const currentPage = ref(0)
-const hasMore = ref(true)
-const limitReached = ref(false)
+const currentPage = ref(1)
+const totalResults = ref(0)
 const selectedMonth = ref('')
 const selectedYear = ref('')
 const error = ref(null)
-const observerTarget = ref(null)
 const showMonthDropdown = ref(false)
 const showYearDropdown = ref(false)
 const monthDropdownRef = ref(null)
 const yearDropdownRef = ref(null)
-const isLoadingInProgress = ref(false)
 
-let observer = null
+// Toast notification state
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastVariant = ref('success')
+
+// Delete confirmation dialog state
+const showDeleteDialog = ref(false)
+const selectedDeleteId = ref(null)
 
 const months = [
   { value: '01', label: 'Jan' },
@@ -564,7 +781,6 @@ const months = [
 
 // Job label mapping
 const jobLabels = {
-  // Replace jobs
   replace_evaporator_front: 'Evaporator Front',
   replace_evaporator_rear: 'Evaporator Rear',
   replace_condenser: 'Condenser',
@@ -582,15 +798,90 @@ const jobLabels = {
   replace_radiator: 'Radiator',
   replace_cabin_filter: 'Cabin Filter',
   replace_magnetic: 'Magnetic',
-  // Pulldown jobs
   pulldown_evaporator: 'Pulldown Evaporator',
   pulldown_condenser: 'Pulldown Condenser',
   pulldown_compressor: 'Pulldown Compressor',
-  // Other jobs
   flushing_system: 'Flushing System',
   install_cabin_filter: 'Install Cabin Filter',
   cleaning: 'Cleaning',
   freon: 'Freon'
+}
+
+// ─── SEARCH TOKEN OPTIMIZATION ───
+// Memoize indexed records - only rebuild when mockDatabase changes
+const indexedRecords = computed(() => {
+  return mockDatabase.map(record => ({
+    ...record,
+    searchableText: [
+      record.customer_name,
+      record.phone,
+      record.car_model,
+      record.plate_number,
+      record.invoice,
+      ...(record.jobs_done || []).map(job => jobLabels[job])
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+  }))
+})
+
+// Cache for filtered results to avoid recomputing
+const filteredCache = ref(new Map())
+const cacheKey = computed(() => 
+  `${searchQuery.value}|${selectedMonth.value}|${selectedYear.value}`
+)
+
+// ─── OPTIMIZED FILTERING LOGIC ───
+function getFilteredRecords(query = '', month = '', year = '') {
+  const key = `${query}|${month}|${year}`
+  
+  // Return cached result if available
+  if (filteredCache.value.has(key)) {
+    return filteredCache.value.get(key)
+  }
+  
+  let filtered = indexedRecords.value
+
+  // Apply filters in order of selectivity (most restrictive first)
+  if (year) {
+    filtered = filtered.filter(s => s.service_date?.startsWith(year))
+  }
+
+  if (month) {
+    filtered = filtered.filter(s => s.service_date?.split('-')[1] === month)
+  }
+
+  if (query) {
+    const q = query.toLowerCase()
+    filtered = filtered.filter(s => s.searchableText.includes(q))
+  }
+
+  // Sort once at the end
+  const result = filtered
+    .slice() // Create a copy to avoid mutating
+    .sort((a, b) => new Date(b.service_date) - new Date(a.service_date))
+  
+  // Cache the result (limit cache size to prevent memory issues)
+  if (filteredCache.value.size > 50) {
+    const firstKey = filteredCache.value.keys().next().value
+    filteredCache.value.delete(firstKey)
+  }
+  filteredCache.value.set(key, result)
+  
+  return result
+}
+
+// ─── FILTERED SERVICES (ALL RESULTS) ───
+const filteredServices = computed(() => {
+  return getFilteredRecords(debouncedSearchQuery.value, selectedMonth.value, selectedYear.value)
+})
+
+// Toast helper function
+function showToastNotification(message, variant = 'success') {
+  toastMessage.value = message
+  toastVariant.value = variant
+  showToast.value = true
 }
 
 function getJobsSummary(jobs) {
@@ -604,7 +895,11 @@ function getJobsSummary(jobs) {
     return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]}`
   }
   
-  return `${jobLabels[jobs[0]] || jobs[0]} +${jobs.length - 1} more`
+  if (jobs.length === 3) {
+    return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]}, ${jobLabels[jobs[2]] || jobs[2]}`
+  }
+  
+  return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]} +${jobs.length - 2} more`
 }
 
 function hasPartConditions(service) {
@@ -619,7 +914,6 @@ function hasPartConditions(service) {
 function getPartDetailsSummary(service) {
   const summary = {}
   
-  // Add part conditions (Brand New, Surplus)
   if (service.part_condition) {
     Object.entries(service.part_condition).forEach(([job, condition]) => {
       if (condition === 'brand_new') {
@@ -630,7 +924,6 @@ function getPartDetailsSummary(service) {
     })
   }
   
-  // Add owner's parts
   if (service.owner_parts) {
     Object.entries(service.owner_parts).forEach(([job, isOwner]) => {
       if (isOwner) {
@@ -640,6 +933,18 @@ function getPartDetailsSummary(service) {
   }
   
   return summary
+}
+
+function getPartDetailsDisplay(service, maxVisible = 3) {
+  const summary = getPartDetailsSummary(service)
+  const entries = Object.entries(summary)
+  
+  if (entries.length === 0) return { visible: [], remaining: 0 }
+  
+  return {
+    visible: entries.slice(0, maxVisible),
+    remaining: Math.max(0, entries.length - maxVisible)
+  }
 }
 
 const availableYears = computed(() => {
@@ -662,15 +967,21 @@ function debounce(fn, delay) {
   }
 }
 
-const filteredServices = computed(() => {
-  // Deduplicate by ID
-  const uniqueMap = new Map()
-  displayedServices.value.forEach(service => {
-    if (!uniqueMap.has(service.id)) {
-      uniqueMap.set(service.id, service)
-    }
-  })
-  return Array.from(uniqueMap.values())
+// ─── PAGINATION COMPUTED ───
+const totalPages = computed(() => {
+  return Math.ceil(filteredServices.value.length / ITEMS_PER_PAGE)
+})
+
+const startIndex = computed(() => {
+  return (currentPage.value - 1) * ITEMS_PER_PAGE
+})
+
+const endIndex = computed(() => {
+  return startIndex.value + ITEMS_PER_PAGE
+})
+
+const paginatedServices = computed(() => {
+  return filteredServices.value.slice(startIndex.value, endIndex.value)
 })
 
 // Job History functions
@@ -698,143 +1009,7 @@ function clearFilters() {
   selectedMonth.value = ''
   selectedYear.value = ''
   searchQuery.value = ''
-}
-
-function fetchServices(page, query = '', month = '', year = '') {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      try {
-        let filtered = [...mockDatabase]
-
-        if (month) {
-          filtered = filtered.filter(s => s.service_date?.split('-')[1] === month)
-        }
-
-        if (year) {
-          filtered = filtered.filter(s => s.service_date?.split('-')[0] === year)
-        }
-
-        if (query) {
-          const q = query.toLowerCase()
-          filtered = filtered.filter(s =>
-            s.customer_name?.toLowerCase().includes(q) ||
-            s.phone?.toLowerCase().includes(q) ||
-            s.car_model?.toLowerCase().includes(q) ||
-            s.plate_number?.toLowerCase().includes(q) ||
-            s.invoice?.toLowerCase().includes(q) ||
-            s.jobs_done?.some(job => jobLabels[job]?.toLowerCase().includes(q))
-          )
-        }
-
-        // Remove duplicates based on ID
-        const uniqueMap = new Map()
-        filtered.forEach(service => {
-          if (!uniqueMap.has(service.id)) {
-            uniqueMap.set(service.id, service)
-          }
-        })
-        filtered = Array.from(uniqueMap.values())
-
-        filtered.sort((a, b) => new Date(b.service_date) - new Date(a.service_date))
-
-        const start = page * ITEMS_PER_LOAD
-        const end = start + ITEMS_PER_LOAD
-        const items = filtered.slice(start, end)
-
-        resolve({
-          items,
-          hasMore: end < filtered.length,
-          total: filtered.length
-        })
-      } catch (err) {
-        reject(new Error('Failed to fetch services'))
-      }
-    }, 300)
-  })
-}
-
-async function loadMore() {
-  if (isLoadingInProgress.value || loadingMore.value || !hasMore.value || limitReached.value) return
-
-  if (displayedServices.value.length >= MAX_ITEMS_IN_VIEW) {
-    limitReached.value = true
-    hasMore.value = false
-    return
-  }
-
-  isLoadingInProgress.value = true
-  loadingMore.value = true
-  error.value = null
-
-  try {
-    const response = await fetchServices(
-      currentPage.value,
-      searchQuery.value,
-      selectedMonth.value,
-      selectedYear.value
-    )
-
-    // Check for duplicates before adding
-    const existingIds = new Set(displayedServices.value.map(s => s.id))
-    const newItems = response.items.filter(item => !existingIds.has(item.id))
-
-    displayedServices.value.push(...newItems)
-    currentPage.value++
-    hasMore.value = response.hasMore && displayedServices.value.length < MAX_ITEMS_IN_VIEW
-
-    if (displayedServices.value.length >= MAX_ITEMS_IN_VIEW) {
-      limitReached.value = true
-      hasMore.value = false
-    }
-  } catch (err) {
-    error.value = 'Failed to load more records. Please try again.'
-    console.error('Error loading services:', err)
-  } finally {
-    loadingMore.value = false
-    isLoadingInProgress.value = false
-  }
-}
-
-async function initialLoad() {
-  if (isLoadingInProgress.value) return
-  
-  isLoadingInProgress.value = true
-  initialLoading.value = true
-  error.value = null
-
-  try {
-    const response = await fetchServices(
-      0,
-      searchQuery.value,
-      selectedMonth.value,
-      selectedYear.value
-    )
-    displayedServices.value = response.items
-    currentPage.value = 1
-    hasMore.value = response.hasMore
-    limitReached.value = false
-  } catch (err) {
-    error.value = 'Failed to load sales records. Please refresh the page.'
-    console.error('Error loading initial services:', err)
-  } finally {
-    initialLoading.value = false
-    isLoadingInProgress.value = false
-  }
-}
-
-function setupIntersectionObserver() {
-  if (observer) observer.disconnect()
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && !isLoadingInProgress.value && !loadingMore.value && hasMore.value && !limitReached.value) {
-        loadMore()
-      }
-    },
-    { threshold: 0.1 }
-  )
-
-  if (observerTarget.value) observer.observe(observerTarget.value)
+  debouncedSearchQuery.value = ''
 }
 
 function handleClickOutside(event) {
@@ -849,48 +1024,53 @@ function handleClickOutside(event) {
   }
 }
 
-// Create debounced search handler
-const debouncedSearch = debounce(async () => {
-  if (observer) observer.disconnect()
-  
-  displayedServices.value = []
-  currentPage.value = 0
-  hasMore.value = true
-  limitReached.value = false
-  
-  await initialLoad()
-  
-  await nextTick()
-  setupIntersectionObserver()
-}, 300) // 300ms delay
+// Debounced search - waits for user to stop typing before searching
+const debouncedSearch = debounce((query) => {
+  debouncedSearchQuery.value = query
+  currentPage.value = 1
+}, 300)
 
-// Watch with debounce for search, immediate for filters
-watch(searchQuery, () => {
-  debouncedSearch()
+// Watch search query and debounce it
+watch(searchQuery, (newQuery) => {
+  debouncedSearch(newQuery)
 })
 
-watch([selectedMonth, selectedYear], async () => {
-  if (observer) observer.disconnect()
-  
-  displayedServices.value = []
-  currentPage.value = 0
-  hasMore.value = true
-  limitReached.value = false
-  
-  await initialLoad()
-  
-  await nextTick()
-  setupIntersectionObserver()
+// Watch filters - reset to page 1 immediately
+watch([selectedMonth, selectedYear], () => {
+  currentPage.value = 1
 })
+
+// Watch current page to scroll both containers to top
+watch(currentPage, async () => {
+  await nextTick()
+  // Scroll mobile container
+  if (mobileScrollContainerRef.value) {
+    mobileScrollContainerRef.value.scrollTop = 0
+  }
+  // Scroll desktop container
+  if (desktopScrollContainerRef.value) {
+    desktopScrollContainerRef.value.scrollTop = 0
+  }
+})
+
+// Watch filtered services to update total
+watch(filteredServices, (newVal) => {
+  totalResults.value = newVal.length
+}, { immediate: true })
 
 onMounted(() => {
-  initialLoad()
-  setupIntersectionObserver()
+  initialLoading.value = true
+  
+  // Simulate initial load
+  setTimeout(() => {
+    totalResults.value = filteredServices.value.length
+    initialLoading.value = false
+  }, 300)
+  
   document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
-  if (observer) observer.disconnect()
   document.removeEventListener('click', handleClickOutside)
 })
 
@@ -916,8 +1096,6 @@ function closeViewModal() {
 }
 
 function openEditModal(service) {
-  console.log('Opening edit modal with service:', service) // Debug log
-
   selectedService.value = { ...service }
   showModal.value = true
   showViewModal.value = false
@@ -925,20 +1103,13 @@ function openEditModal(service) {
 }
 
 function handleEditFromView(service) {
-  console.log('Edit from view with service:', service) // Debug log
-  // Update the displayed services list
-  const index = displayedServices.value.findIndex(s => s.id === service.id)
-  if (index !== -1) {
-    displayedServices.value[index] = { ...service }
-  }
-  // Update the mock database
   const dbIndex = mockDatabase.findIndex(s => s.id === service.id)
   if (dbIndex !== -1) {
     mockDatabase[dbIndex] = { ...service }
   }
   
-  // Update the view service to reflect changes
   viewService.value = { ...service }
+  showToastNotification('Record has been updated successfully', 'success')
 }
 
 function closeModal() {
@@ -948,17 +1119,18 @@ function closeModal() {
 
 async function handleSave(serviceData) {
   const tempId = `temp-${Date.now()}`
+  const isEditMode = !!serviceData.id
 
-  if (serviceData.id) {
-    const index = displayedServices.value.findIndex(s => s.id === serviceData.id)
-    if (index !== -1) {
-      displayedServices.value[index] = { ...serviceData }
-    }
-
+  if (isEditMode) {
     const dbIndex = mockDatabase.findIndex(s => s.id === serviceData.id)
     if (dbIndex !== -1) {
       mockDatabase[dbIndex] = { ...serviceData }
     }
+    
+    // Invalidate cache when data changes
+    filteredCache.value.clear()
+    
+    showToastNotification('Record has been updated successfully', 'success')
   } else {
     const newService = {
       ...serviceData,
@@ -967,27 +1139,21 @@ async function handleSave(serviceData) {
       created_at: new Date().toISOString().split('T')[0]
     }
 
-    displayedServices.value.unshift(newService)
-
     try {
       await new Promise(resolve => setTimeout(resolve, 800))
 
       const newId = Math.max(...mockDatabase.map(s => s.id), 0) + 1
       const savedService = { ...newService, id: newId, loading: false }
 
-      const index = displayedServices.value.findIndex(s => s.id === tempId)
-      if (index !== -1) {
-        displayedServices.value[index] = savedService
-      }
-
       mockDatabase.unshift(savedService)
-
-      if (displayedServices.value.length > MAX_ITEMS_IN_VIEW) {
-        displayedServices.value.pop()
-      }
+      
+      // Invalidate cache when data changes
+      filteredCache.value.clear()
+      
+      showToastNotification('New record created successfully', 'success')
     } catch (err) {
-      displayedServices.value = displayedServices.value.filter(s => s.id !== tempId)
       error.value = 'Failed to save record. Please try again.'
+      showToastNotification('Failed to save record. Please try again.', 'error')
       console.error('Error saving service:', err)
     }
   }
@@ -996,15 +1162,25 @@ async function handleSave(serviceData) {
 }
 
 function deleteService(id) {
-  if (confirm('Delete this sales record? This action cannot be undone.')) {
-    displayedServices.value = displayedServices.value.filter(s => s.id !== id)
+  selectedDeleteId.value = id
+  showDeleteDialog.value = true
+  openMenuId.value = null
+}
 
-    const dbIndex = mockDatabase.findIndex(s => s.id === id)
+function confirmDelete() {
+  if (selectedDeleteId.value) {
+    const dbIndex = mockDatabase.findIndex(s => s.id === selectedDeleteId.value)
     if (dbIndex !== -1) {
       mockDatabase.splice(dbIndex, 1)
     }
-
-    openMenuId.value = null
+    
+    // Invalidate cache when data changes
+    filteredCache.value.clear()
+    
+    showToastNotification('Record deleted successfully', 'success')
+    
+    selectedDeleteId.value = null
+    showDeleteDialog.value = false
   }
 }
 

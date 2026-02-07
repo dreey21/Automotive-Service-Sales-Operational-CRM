@@ -119,7 +119,7 @@
               </svg>
               <div>
                 <p class="text-xs text-[var(--muted-foreground)] font-medium uppercase tracking-wide">Cost</p>
-                <p class="text-2xl font-extrabold text-blue-300 tabular-nums">₱{{ currentService.cost?.toFixed(2) || '0.00' }}</p>
+                <p class="text-2xl font-extrabold text-green-600 tabular-nums">₱{{ currentService.cost?.toFixed(2) || '0.00' }}</p>
               </div>
             </div>
           </div>
@@ -325,7 +325,7 @@
                 </svg>
                 <p class="text-xs text-[var(--muted-foreground)] font-semibold uppercase tracking-wide">Total Cost</p>
               </div>
-              <p class="text-2xl font-bold text-blue-300 tabular-nums">₱{{ currentService.cost?.toFixed(2) || '0.00' }}</p>
+              <p class="text-2xl font-bold text-green-600 tabular-nums">₱{{ currentService.cost?.toFixed(2) || '0.00' }}</p>
             </div>
           </div>
 

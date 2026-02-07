@@ -7,7 +7,7 @@
   >
     <!-- Panel container -->
     <div
-      class="absolute top-0 right-0 bottom-0 w-full bg-[var(--background)] shadow-2xl flex flex-col slide-in"
+      class="absolute top-0 right-0 w-full bg-[var(--background)] shadow-2xl flex flex-col slide-in bottom-16 md:bottom-0"
       :class="[
         'max-w-md md:max-w-xs'
       ]"

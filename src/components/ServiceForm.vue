@@ -655,27 +655,14 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- Auto-fill Toast Notification (Floating) -->
-    <transition
-      enter-active-class="transition ease-out duration-300"
-      enter-from-class="opacity-0 -translate-y-2"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition ease-in duration-200"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 -translate-y-2"
-    >
-      <div
-        v-if="isAutoFilled"
-        class="fixed top-4 left-4 right-4 md:top-8 md:left-1/2 md:right-auto md:-translate-x-1/2 z-[200] md:max-w-md"
-      >
-        <div class="flex items-start gap-3 p-4 bg-green-500/95 backdrop-blur-sm rounded-lg shadow-2xl border border-green-400/30">
-          <svg class="w-5 h-5 text-white shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p class="text-sm text-white font-semibold leading-relaxed">Customer info auto-filled from previous records</p>
-        </div>
-      </div>
-    </transition>
+    <!-- Toast Notification (Replaces inline auto-fill toast) -->
+    <ToastNotification
+      :show="showAutoFillToast"
+      message="Customer info auto-filled from previous records"
+      variant="info"
+      :duration="3000"
+      @close="showAutoFillToast = false"
+    />
   </div>
 </template>
 
@@ -683,6 +670,7 @@
 import { ref, computed, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import StepIndicator from './StepIndicator.vue'
 import ServicesBottomSheet from './ServicesBottomSheet.vue'
+import ToastNotification from './ToastNotification.vue'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -722,7 +710,9 @@ const hasTouchMoved = ref(false)
 const showDiscardDialog = ref(false)
 const showClearServicesDialog = ref(false)
 const hasUnsavedChanges = ref(false)
-const isAutoFilled = ref(false)
+
+// Toast notification state
+const showAutoFillToast = ref(false)
 const initialFormSnapshot = ref(null)
 
 const formData = ref({
@@ -807,6 +797,55 @@ const filteredPulldownJobs = computed(() => filterJobs(pulldownJobs))
 const filteredOtherJobs = computed(() => filterJobs(otherJobs))
 const allFilteredJobs = computed(() => [...filteredReplaceJobs.value, ...filteredPulldownJobs.value, ...filteredOtherJobs.value])
 
+// Indexed lookup for O(1) performance
+const recordsByPlate = computed(() => {
+  const map = new Map()
+  props.existingRecords.forEach(record => {
+    const key = record.plate_number.trim().toUpperCase()
+    // Keep the most recent record for each plate number
+    if (!map.has(key) || new Date(record.service_date) > new Date(map.get(key).service_date)) {
+      map.set(key, record)
+    }
+  })
+  return map
+})
+
+// Simple debounce implementation
+function debounce(fn, delay) {
+  let timeoutId = null
+  return function (...args) {
+    if (timeoutId) clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => {
+      fn.apply(this, args)
+    }, delay)
+  }
+}
+
+// Debounced autofill check
+const checkAndAutoFill = debounce((newPlateNumber) => {
+  // Skip if editing existing record
+  if (props.service) return
+  
+  if (!newPlateNumber || newPlateNumber.trim() === '') {
+    showAutoFillToast.value = false
+    return
+  }
+  
+  const normalizedPlate = newPlateNumber.trim().toUpperCase()
+  const existingRecord = recordsByPlate.value.get(normalizedPlate)
+  
+  if (existingRecord) {
+    formData.value.customer_name = existingRecord.customer_name || ''
+    formData.value.phone = existingRecord.phone || ''
+    formData.value.car_model = existingRecord.car_model || ''
+    formData.value.car_year = existingRecord.car_year || ''
+    
+    // Show toast notification
+    showAutoFillToast.value = true
+  } else {
+    showAutoFillToast.value = false
+  }
+}, 300)
 
 function filterJobs(jobs) {
   if (!searchQuery.value) return jobs
@@ -948,18 +987,13 @@ const canProceed = computed(() => {
 
 function safeDeepClone(obj) {
   if (!obj) return obj
-  
-  // Parse and stringify to create a deep copy
-  // This only works with JSON-serializable data
   return JSON.parse(JSON.stringify(obj))
 }
 
 onMounted(() => {
   if (props.service) {
-    // Use JSON-based deep clone (safer for this use case)
     formData.value = safeDeepClone(props.service)
     
-    // Ensure nested objects exist
     if (!formData.value.jobs_done) formData.value.jobs_done = []
     if (!formData.value.owner_parts) formData.value.owner_parts = {}
     if (!formData.value.part_condition) formData.value.part_condition = {}
@@ -1015,40 +1049,6 @@ function handlePlateNumberInput(event) {
   const plateNumber = event.target.value
   checkAndAutoFill(plateNumber)
 }
-
-function checkAndAutoFill(newPlateNumber) {
-  if (props.service) return
-  
-  if (!newPlateNumber || newPlateNumber.trim() === '') {
-    isAutoFilled.value = false
-    return
-  }
-  
-  const normalizedPlate = newPlateNumber.trim().toUpperCase()
-  
-  const existingRecord = props.existingRecords
-    .filter(record => record.plate_number.trim().toUpperCase() === normalizedPlate)
-    .sort((a, b) => new Date(b.service_date) - new Date(a.service_date))[0]
-  
-  if (existingRecord) {
-    formData.value.customer_name = existingRecord.customer_name || ''
-    formData.value.phone = existingRecord.phone || ''
-    formData.value.car_model = existingRecord.car_model || ''
-    formData.value.car_year = existingRecord.car_year || ''
-    
-    isAutoFilled.value = true
-    
-    setTimeout(() => {
-      isAutoFilled.value = false
-    }, 3000)
-  } else {
-    isAutoFilled.value = false
-  }
-}
-
-watch(() => formData.value.plate_number, (newPlateNumber) => {
-  checkAndAutoFill(newPlateNumber)
-})
 
 watch(selectedJobs, (newVal) => {
   formData.value.jobs_done = [...newVal]
@@ -1156,23 +1156,17 @@ function handleNext() {
   }
 }
 
-// Add audit trail metadata when saving
 function handleSubmit() {
   const dataToSave = { ...formData.value }
   
-  // Get current timestamp in ISO format
   const now = new Date().toISOString().split('T')[0]
   
   if (props.service?.id) {
-    // Editing existing record
     dataToSave.id = props.service.id
-    // Preserve created_at from original service
     dataToSave.created_at = props.service.created_at
-    // Update the updated_at and updated_by fields
     dataToSave.updated_at = now
     dataToSave.updated_by = 'admin'
   } else {
-    // Creating new record
     dataToSave.created_at = now
     dataToSave.updated_at = now
     dataToSave.updated_by = 'admin'
@@ -1201,8 +1195,8 @@ function close() {
   isServicesExpanded.value = false
   hasUnsavedChanges.value = false
   initialFormSnapshot.value = null
+  showAutoFillToast.value = false
   
-  // Reset formData
   formData.value = {
     customer_name: '',
     phone: '',

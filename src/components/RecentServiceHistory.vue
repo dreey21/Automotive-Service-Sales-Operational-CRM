@@ -184,8 +184,8 @@
             </div>
             
             <div class="flex flex-col items-center gap-0.5 relative z-10">
-              <div class="w-10 h-1 rounded-full animate-pulse bg-[var(--accent)] transition-colors hover:bg-[var(--accent)]/60"></div>
-              <div class="text-[9px] text-[var(--muted-foreground)] uppercase tracking-widest font-semibold">
+              <div class="w-10 h-1 rounded-full bg-[var(--muted-foreground)] transition-colors hover:bg-[var(--accent)]/60"></div>
+              <div class="text-[9px] pt-4 text-[var(--muted-foreground)] uppercase tracking-widest font-semibold">
                 Swipe up to hide
               </div>
             </div>
