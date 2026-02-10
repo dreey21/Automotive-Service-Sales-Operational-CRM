@@ -260,125 +260,125 @@
 
     <!-- RECORDS: MOBILE CARDS + DESKTOP TABLE -->
     <template v-else>
-      <!-- Mobile: Card List - Pagination inside scrollable area, bottom nav padding at the very end -->
+      <!-- Mobile: Card List -->
       <div class="md:hidden h-[calc(100vh-450px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent" ref="mobileScrollContainerRef">
         <div class="space-y-2">
           <div
             v-for="service in paginatedServices"
             :key="`card-${service.id}`"
-            class="relative bg-[var(--card)] border border-[var(--border)] p-2.5 hover:border-[var(--accent)]/60 hover:shadow-md transition-all cursor-pointer active:scale-[0.98] group"
+            class="relative overflow-hidden"
             style="border-radius: 6px;"
-            @click="openViewModal(service)"
           >
-            <!-- Loading Overlay -->
-            <div v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" style="border-radius: 6px;">
-              <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-
-            <!-- Click Hint Icon -->
-            <div class="absolute top-2 left-2 opacity-0 group-hover:opacity-40 transition-opacity">
-              <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
-
-            <!-- Menu Button -->
-            <button
-              @click.stop="toggleMenu(service.id)"
-              class="absolute top-2 right-2 p-1 text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--muted)]/50 transition-colors z-10"
-              style="border-radius: 4px;"
-            >
-              <svg class="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-              </svg>
-            </button>
-
-            <!-- Dropdown Menu -->
-            <div
-              v-if="openMenuId === service.id"
-              class="absolute top-9 right-2 bg-[var(--card)] border border-[var(--border)] shadow-lg overflow-hidden z-20 min-w-[150px]"
-              style="border-radius: 6px;"
-              @click.stop
-            >
+            <!-- Action Buttons Background (Always rendered behind) -->
+            <div class="absolute inset-0 flex items-center gap-2 justify-end pr-2 pl-2 bg-gray-950">
               <button
-                @click="openEditModal(service)"
-                class="w-full px-3 py-2.5 text-left text-sm text-[var(--foreground)] bg-blue-500/20 text-blue-300 transition-colors flex items-center gap-2.5"
+                :ref="el => setButtonRef(el, service.id, 'edit')"
+                @click.stop="openEditModal(service); closeSwipe(service.id)"
+                class="w-14 h-11 flex flex-col items-center justify-center gap-0.5 text-white rounded-md bg-grey-950 active:opacity-80 transition-opacity duration-150"
+                :style="{
+                  opacity: 0,
+                  transform: 'scale(0.8)',
+                  transition: 'opacity 0.2s ease-out, transform 0.2s ease-out'
+                }"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
-                Edit
+                <span class="text-[8px] font-semibold text-[var(--accent)] uppercase tracking-wide">Edit</span>
               </button>
-              <div class="border-t border-[var(--border)]"></div>
               <button
-                @click="deleteService(service.id)"
-                class="w-full px-3 py-2.5 text-left text-sm bg-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors flex items-center gap-2.5"
+                :ref="el => setButtonRef(el, service.id, 'delete')"
+                @click.stop="deleteService(service.id); closeSwipe(service.id)"
+                class="w-14 h-11 flex flex-col items-center justify-center gap-0.5 text-white rounded-md active:opacity-80 transition-opacity duration-150"
+                :style="{
+                  opacity: 0,
+                  transform: 'scale(0.8)',
+                  transition: 'opacity 0.2s ease-out, transform 0.2s ease-out'
+                }"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Delete
+                <span class="text-[8px] font-semibold text-red-500 uppercase tracking-wide">Delete</span>
               </button>
             </div>
 
-            <!-- Card Content - ULTRA COMPACT DESIGN -->
-            <div class="pr-7">
-              <!-- Row 1: Plate Number + Date only -->
-              <div class="flex items-baseline justify-between mb-1">
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <h3 class="text-[15px] font-extrabold text-[var(--foreground)] truncate leading-tight font-mono tracking-wider">
-                    {{ service.plate_number || 'Walk-in' }}
-                  </h3>
-                  <JobHistoryBadge 
-                    v-if="hasJobHistory(service.plate_number)" 
-                    :job-count="getJobCount(service.plate_number)"
-                  />
+            <!-- Swipeable Card Content (Sits on top) -->
+            <div
+              :ref="el => setCardRef(el, service.id)"
+              class="relative border border-[var(--border)] touch-pan-y swipe-card"
+              style="border-radius: 6px; background-color: #1A1A24; transition: transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1); will-change: transform;"
+              :data-service-id="service.id"
+              @touchstart="handleTouchStart($event, service.id)"
+              @touchmove="handleTouchMove($event, service.id)"
+              @touchend="handleTouchEnd($event, service.id)"
+              @click="handleCardClick(service)"
+            >
+              <div class="p-2.5">
+                <!-- Loading Overlay -->
+                <div v-if="service.loading" class="absolute inset-0 flex items-center justify-center z-10" style="border-radius: 6px; background-color: rgba(26, 26, 36, 0.9);">
+                  <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
                 </div>
-                <span class="text-xs font-bold text-[var(--muted-foreground)] flex-shrink-0">
-                  {{ formatDate(service.service_date) }}
-                </span>
-              </div>
 
-              <!-- Row 2: Jobs Done -->
-              <div class="flex items-center gap-1.5 mb-1 text-xs">
-                <svg class="w-3.5 h-3.5 flex-shrink-0 text-[var(--muted-foreground)] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <span class="truncate font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
-              </div>
+                <!-- Card Content - ULTRA COMPACT DESIGN -->
+                <div>
+                  <!-- Row 1: Plate Number + Date only -->
+                  <div class="flex items-baseline justify-between mb-1">
+                    <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                      <h3 class="text-[15px] font-extrabold text-[var(--foreground)] truncate leading-tight font-mono tracking-wider">
+                        {{ service.plate_number || 'Walk-in' }}
+                      </h3>
+                      <JobHistoryBadge 
+                        v-if="hasJobHistory(service.plate_number)" 
+                        :job-count="getJobCount(service.plate_number)"
+                      />
+                    </div>
+                    <span class="text-xs font-bold text-[var(--muted-foreground)] flex-shrink-0">
+                      {{ formatDate(service.service_date) }}
+                    </span>
+                  </div>
 
-              <!-- Row 3: Part Details badges (if any) -->
-              <div v-if="hasPartConditions(service)" class="mb-1 flex flex-wrap gap-1">
-                <template v-if="getPartDetailsDisplay(service, 2).visible.length > 0">
-                  <PartConditionBadge 
-                    v-for="([job, condition], index) in getPartDetailsDisplay(service, 2).visible" 
-                    :key="job" 
-                    :condition="condition"/>
-                  <span 
-                    v-if="getPartDetailsDisplay(service, 2).remaining > 0" 
-                    class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[var(--muted)] text-[var(--muted-foreground)]"
-                  >
-                    +{{ getPartDetailsDisplay(service, 2).remaining }} more
-                  </span>
-                </template>
-              </div>
+                  <!-- Row 2: Jobs Done -->
+                  <div class="flex items-center gap-1.5 mb-1 text-xs">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0 text-[var(--muted-foreground)] opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span class="truncate font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
+                  </div>
 
-              <!-- Row 4: Vehicle Model + Customer + Price on right -->
-              <div class="flex items-center justify-between gap-2 text-xs text-[var(--muted-foreground)]">
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0h.01M15 17a2 2 0 104 0m-4 0h.01M17 16h.01" />
-                  </svg>
-                  <span class="truncate">
-                    <span v-if="service.car_model" class="font-semibold">{{ service.car_model }}</span>
-                    <span v-else class="italic opacity-60">No vehicle</span>
-                    <span v-if="service.car_model && service.customer_name" class="opacity-100 mx-1">·</span>
-                    <span v-if="service.customer_name" class="opacity-75">{{ service.customer_name }}</span>
-                  </span>
+                  <!-- Row 3: Part Details badges (if any) -->
+                  <div v-if="hasPartConditions(service)" class="mb-1 flex flex-wrap gap-1">
+                    <template v-if="getPartDetailsDisplay(service, 2).visible.length > 0">
+                      <PartConditionBadge 
+                        v-for="([job, condition], index) in getPartDetailsDisplay(service, 2).visible" 
+                        :key="job" 
+                        :condition="condition"/>
+                      <span 
+                        v-if="getPartDetailsDisplay(service, 2).remaining > 0" 
+                        class="text-[10px] px-1.5 py-0.5 rounded font-medium bg-[var(--muted)] text-[var(--muted-foreground)]"
+                      >
+                        +{{ getPartDetailsDisplay(service, 2).remaining }} more
+                      </span>
+                    </template>
+                  </div>
+
+                  <!-- Row 4: Vehicle Model + Customer + Price on right -->
+                  <div class="flex items-center justify-between gap-2 text-xs text-[var(--muted-foreground)]">
+                    <div class="flex items-center gap-1.5 flex-1 min-w-0">
+                      <svg class="w-3.5 h-3.5 flex-shrink-0 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0h.01M15 17a2 2 0 104 0m-4 0h.01M17 16h.01" />
+                      </svg>
+                      <span class="truncate">
+                        <span v-if="service.car_model" class="font-semibold">{{ service.car_model }}</span>
+                        <span v-else class="italic opacity-60">No vehicle</span>
+                        <span v-if="service.car_model && service.customer_name" class="opacity-100 mx-1">·</span>
+                        <span v-if="service.customer_name" class="opacity-75">{{ service.customer_name }}</span>
+                      </span>
+                    </div>
+                    <span class="text-base font-extrabold text-green-600 tabular-nums flex-shrink-0">₱{{ service.cost.toFixed(2) }}</span>
+                  </div>
                 </div>
-                <span class="text-base font-extrabold text-green-600 tabular-nums flex-shrink-0">₱{{ service.cost.toFixed(2) }}</span>
               </div>
             </div>
           </div>
@@ -542,7 +542,7 @@
                     <!-- Edit Button -->
                     <button
                       @click="openEditModal(service)"
-                      class="p-1.5 text-[var(--muted-foreground)] hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                      class="p-1.5 text-[var(--muted-foreground)] hover:text-[var(--accent)] hover:bg-blue-500/10 transition-colors"
                       style="border-radius: 4px;"
                       title="Edit"
                     >
@@ -663,10 +663,10 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useDebounce } from '@/composables/useDebounce'
 import ServiceForm from '../components/ServiceForm.vue'
 import ViewDetailsModal from '../components/ViewDetailsModal.vue'
 import ToastNotification from '../components/ToastNotification.vue'
-import { useDebounce } from '@/composables/useDebounce'
 import SearchBar from "@/components/common/inputs/SearchBar.vue";
 import EmptyState from '@/components/common/feedback/EmptyState.vue'
 import PartConditionBadge from '@/components/features/sales/widgets/PartConditionBadge.vue'
@@ -720,6 +720,17 @@ const showMonthDropdown = ref(false)
 const showYearDropdown = ref(false)
 const monthDropdownRef = ref(null)
 const yearDropdownRef = ref(null)
+const cardRefs = ref({})
+const buttonRefs = ref({})
+const swipedCardId = ref(null)
+const gestureState = {
+  isDragging: {},
+  startX: {},
+  startY: {},
+  currentX: {},
+  cardElements: {},
+  buttonElements: {}
+}
 
 // Toast notification state
 const showToast = ref(false)
@@ -980,6 +991,11 @@ function clearFilters() {
 
 function handleClickOutside(event) {
   openMenuId.value = null
+  
+  // Close any open swiped card
+  if (swipedCardId.value !== null) {
+    closeSwipe(swipedCardId.value)
+  }
 
   if (monthDropdownRef.value && !monthDropdownRef.value.contains(event.target)) {
     showMonthDropdown.value = false
@@ -1183,5 +1199,171 @@ function selectMonth(month) {
 function selectYear(year) {
   selectedYear.value = selectedYear.value === year ? '' : year
   showYearDropdown.value = false
+}
+
+function setCardRef(el, serviceId) {
+  if (el) {
+    cardRefs.value[serviceId] = el
+  }
+}
+
+function setButtonRef(el, serviceId, buttonType) {
+  if (el) {
+    if (!buttonRefs.value[serviceId]) {
+      buttonRefs.value[serviceId] = {}
+    }
+    buttonRefs.value[serviceId][buttonType] = el
+  }
+}
+
+function updateButtonVisibility(serviceId, revealPercent) {
+  const buttons = gestureState.buttonElements[serviceId] || buttonRefs.value[serviceId]
+  if (!buttons) return
+  
+  const opacity = revealPercent
+  const scale = 0.8 + (revealPercent * 0.2)
+  
+  // Use will-change for optimization hint
+  if (buttons.edit) {
+    buttons.edit.style.willChange = revealPercent > 0 ? 'opacity, transform' : 'auto'
+    buttons.edit.style.opacity = opacity
+    buttons.edit.style.transform = `scale(${scale})`
+  }
+  
+  if (buttons.delete) {
+    buttons.delete.style.willChange = revealPercent > 0 ? 'opacity, transform' : 'auto'
+    buttons.delete.style.opacity = opacity
+    buttons.delete.style.transform = `scale(${scale})`
+  }
+}
+
+function handleTouchStart(e, serviceId) {
+  const card = cardRefs.value[serviceId]
+  if (!card) return
+  
+  // Cache element references
+  gestureState.cardElements[serviceId] = card
+  gestureState.buttonElements[serviceId] = buttonRefs.value[serviceId]
+  
+  gestureState.startX[serviceId] = e.touches[0].clientX
+  gestureState.startY[serviceId] = e.touches[0].clientY
+  gestureState.isDragging[serviceId] = false
+  
+  // Store current position directly from transform
+  const currentTransform = card.style.transform || 'translateX(0px)'
+  const match = currentTransform.match(/translateX\(([-\d.]+)px\)/)
+  gestureState.currentX[serviceId] = match ? parseFloat(match[1]) : 0
+}
+
+function handleTouchMove(e, serviceId) {
+  const state = gestureState
+  if (!state.startX[serviceId]) return
+  
+  const currentX = e.touches[0].clientX
+  const currentY = e.touches[0].clientY
+  const deltaX = currentX - state.startX[serviceId]
+  const deltaY = currentY - state.startY[serviceId]
+  
+  // Determine if horizontal swipe
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+    if (!state.isDragging[serviceId]) {
+      state.isDragging[serviceId] = true
+      // Disable transition once
+      const card = state.cardElements[serviceId]
+      if (card) card.style.transition = 'none'
+    }
+    
+    e.preventDefault()
+    
+    const card = state.cardElements[serviceId]
+    if (!card) return
+    
+    // Calculate new position
+    const startX = state.currentX[serviceId] || 0
+    let newX = startX + deltaX
+    
+    const maxSwipe = -136
+    newX = Math.max(maxSwipe, Math.min(0, newX))
+    
+    // Use transform3d for hardware acceleration
+    card.style.transform = `translate3d(${newX}px, 0, 0)`
+    
+    // Update buttons with RAF for smoother animation
+    const revealPercent = Math.abs(newX) / Math.abs(maxSwipe)
+    requestAnimationFrame(() => {
+      updateButtonVisibility(serviceId, revealPercent)
+    })
+  }
+}
+
+function handleTouchEnd(e, serviceId) {
+  const state = gestureState
+  
+  if (!state.isDragging[serviceId]) {
+    // Clean up
+    delete state.isDragging[serviceId]
+    return
+  }
+  
+  const card = state.cardElements[serviceId]
+  if (!card) return
+  
+  const currentTransform = card.style.transform
+  const match = currentTransform.match(/translate3d\(([-\d.]+)px/)
+  const currentX = match ? parseFloat(match[1]) : 0
+  
+  // Re-enable transition
+  card.style.transition = 'transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1)'
+  
+  // Snap to position
+  if (currentX < -68) {
+    card.style.transform = 'translate3d(-136px, 0, 0)'
+    swipedCardId.value = serviceId
+    requestAnimationFrame(() => updateButtonVisibility(serviceId, 1))
+  } else {
+    card.style.transform = 'translate3d(0px, 0, 0)'
+    swipedCardId.value = null
+    requestAnimationFrame(() => updateButtonVisibility(serviceId, 0))
+  }
+  
+  // Cleanup
+  delete state.isDragging[serviceId]
+  delete state.startX[serviceId]
+  delete state.startY[serviceId]
+  delete state.currentX[serviceId]
+  delete state.cardElements[serviceId]
+  delete state.buttonElements[serviceId]
+}
+
+function handleCardClick(service) {
+  // Use plain object instead of reactive ref
+  if (!gestureState.isDragging[service.id]) {
+    if (swipedCardId.value === service.id) {
+      closeSwipe(service.id)
+    } else {
+      openViewModal(service)
+    }
+  }
+}
+function closeSwipe(serviceId) {
+  const card = cardRefs.value[serviceId]
+  const buttons = buttonRefs.value[serviceId]
+  
+  if (card) {
+    card.style.transition = 'transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1)'
+    card.style.transform = 'translateX(0px)'
+  }
+  
+  if (buttons) {
+    if (buttons.edit) {
+      buttons.edit.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out'
+    }
+    if (buttons.delete) {
+      buttons.delete.style.transition = 'opacity 0.2s ease-out, transform 0.2s ease-out'
+    }
+    updateButtonVisibility(serviceId, 0)
+  }
+  
+  swipedCardId.value = null
 }
 </script>
