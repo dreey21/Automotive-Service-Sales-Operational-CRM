@@ -625,7 +625,6 @@
 
     <!-- ─── MODALS ─── -->
     <ServiceForm
-      v-if="showModal"
       :service="selectedService"
       :show="showModal"
       :show-backdrop="true"
@@ -1108,7 +1107,10 @@ function handleEditFromView(service) {
 
 function closeModal() {
   showModal.value = false
-  selectedService.value = null
+  // Wait for animation to complete before clearing selection
+  setTimeout(() => {
+    selectedService.value = null
+  }, 250)
 }
 
 async function handleSave(serviceData) {
