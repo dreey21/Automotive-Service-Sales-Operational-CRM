@@ -187,6 +187,7 @@
               <col style="width: 200px;">
               <col style="width: 140px;">
               <col style="width: auto;">
+              <col style="width: 140px;">
               <col style="width: 180px;">
               <col style="width: 140px;">
               <col style="width: 180px;">
@@ -197,6 +198,7 @@
                 <th class="h-10 pl-10 pr-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Phone</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
@@ -213,6 +215,7 @@
               <col style="width: 200px;">
               <col style="width: 140px;">
               <col style="width: auto;">
+              <col style="width: 140px;">
               <col style="width: 180px;">
               <col style="width: 140px;">
               <col style="width: 180px;">
@@ -231,6 +234,8 @@
                 <td class="px-4 py-2"><div class="h-3.5 bg-[var(--muted)] w-[80px]" style="border-radius: 3px;"></div></td>
                 <!-- Jobs Done -->
                 <td class="px-4 py-2"><div class="h-3.5 bg-[var(--muted)] w-[120px]" style="border-radius: 3px;"></div></td>
+                <!-- Phone -->
+                <td class="px-4 py-2"><div class="h-3.5 bg-[var(--muted)] w-[100px]" style="border-radius: 3px;"></div></td>
                 <!-- Part Details - badge skeletons -->
                 <td class="px-4 py-2">
                   <div class="flex flex-wrap gap-1">
@@ -373,7 +378,7 @@
                         <span v-if="service.car_model" class="font-semibold">{{ service.car_model }}</span>
                         <span v-else class="italic opacity-60">No vehicle</span>
                         <span v-if="service.car_model && service.customer_name" class="opacity-100 mx-1">·</span>
-                        <span v-if="service.customer_name" class="opacity-75">{{ service.customer_name }}</span>
+                        <span v-if="service.phone">{{ service.phone }}</span>
                       </span>
                     </div>
                     <span class="text-base font-extrabold text-green-600 tabular-nums flex-shrink-0">₱{{ service.cost.toFixed(2) }}</span>
@@ -432,6 +437,7 @@
               <col style="width: 200px;">
               <col style="width: 140px;">
               <col style="width: auto;">
+              <col style="width: 140px;">
               <col style="width: 180px;">
               <col style="width: 140px;">
               <col style="width: 180px;">
@@ -442,6 +448,7 @@
                 <th class="h-10 pl-10 pr-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Plate No.</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Date</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Jobs Done</th>
+                <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Phone</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Part Details</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Cost</th>
                 <th class="h-10 px-4 text-left text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wider">Vehicle</th>
@@ -462,6 +469,7 @@
               <col style="width: 200px;">
               <col style="width: 140px;">
               <col style="width: auto;">
+              <col style="width: 140px;">
               <col style="width: 180px;">
               <col style="width: 140px;">
               <col style="width: 180px;">
@@ -475,7 +483,7 @@
                 @click="openViewModal(service)"
               >
                 <!-- Loading Overlay -->
-                <td v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" colspan="7">
+                <td v-if="service.loading" class="absolute inset-0 bg-[var(--card)]/90 flex items-center justify-center z-10" colspan="8">
                   <div class="w-5 h-5 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div>
                 </td>
 
@@ -503,6 +511,12 @@
                 <!-- Jobs Done -->
                 <td class="px-4 py-2">
                   <span class="text-sm font-medium text-[var(--foreground)]">{{ getJobsSummary(service.jobs_done) }}</span>
+                </td>
+                
+                <!-- Phone -->
+                <td class="px-4 py-2">
+                  <span v-if="service.phone" class="text-sm font-medium text-[var(--muted-foreground)]">{{ service.phone }}</span>
+                  <span v-else class="text-sm text-[var(--muted-foreground)] opacity-50">—</span>
                 </td>
                 
                 <!-- Part Details -->
