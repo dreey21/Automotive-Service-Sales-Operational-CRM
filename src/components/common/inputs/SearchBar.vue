@@ -8,7 +8,7 @@
       @input="$emit('update:modelValue', $event.target.value)"
       type="text"
       :placeholder="placeholder"
-      class="w-full h-11 pl-11 pr-3 bg-[var(--card)] border border-[var(--border)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:border-[var(--accent)] transition-colors"
+      class="w-full h-11 pl-11 pr-3 bg-[var(--card)] border border-[var(--border)] shadow-sm text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 transition-all"
       style="border-radius: 6px;"
     />
   </div>

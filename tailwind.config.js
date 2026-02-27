@@ -27,42 +27,63 @@ export default {
   			]
   		},
   		colors: {
-  			background: 'var(--background)',
-  			'background-alt': '#12121A',
-  			foreground: 'var(--foreground)',
+  			// ── 4DM Brand Palette ──────────────────────────────
+  			// Navy:      #1B2A3B  (logo outer ring, primary)
+  			// Steel Blue:#A8C4D4  (car body)
+  			// Ice Blue:  #7BA7BC  (snowflake / secondary)
+  			// Pale Sky:  #D6E8F0  (muted surfaces)
+  			// Off-White: #F4F8FB  (page background)
+  			// ───────────────────────────────────────────────────
+  			brand: {
+  				navy:       '#101923',
+  				steel:      '#A8C4D4',
+  				ice:        '#7BA7BC',
+  				sky:        '#D6E8F0',
+  				offwhite:   '#F4F8FB',
+  				'navy-800': '#253a50',
+  				'navy-700': '#2f4d69',
+  				'navy-100': '#e8f2f8',
+  			},
+
+  			// ── CSS-variable-driven tokens (Shadcn compatible) ──
+  			background:         'var(--background)',
+  			'background-alt':   'var(--background-alt)',
+  			foreground:         'var(--foreground)',
   			muted: {
-  				DEFAULT: 'var(--muted)',
+  				DEFAULT:    'var(--muted)',
   				foreground: 'var(--muted-foreground)'
   			},
-  			'muted-foreground': '#71717A',
+  			'muted-foreground': 'var(--muted-foreground)',
   			accent: {
-  				DEFAULT: 'var(--accent)',
-  				foreground: 'var(--accent-foreground)'
+  				DEFAULT:    'var(--accent)',
+  				foreground: 'var(--accent-foreground)',
+  				muted:      'var(--accent-muted)',
   			},
-  			'accent-foreground': '#0A0A0F',
+  			'accent-foreground': 'var(--accent-foreground)',
   			card: {
-  				DEFAULT: 'var(--card)',
-  				foreground: 'var(--card-foreground)'
+  				DEFAULT:    'var(--card)',
+  				solid:      'var(--card-solid)',
+  				foreground: 'var(--foreground)'
   			},
   			popover: {
-  				DEFAULT: 'var(--popover)',
+  				DEFAULT:    'var(--popover)',
   				foreground: 'var(--popover-foreground)'
   			},
   			primary: {
-  				DEFAULT: 'var(--primary)',
+  				DEFAULT:    'var(--primary)',
   				foreground: 'var(--primary-foreground)'
   			},
   			secondary: {
-  				DEFAULT: 'var(--secondary)',
+  				DEFAULT:    'var(--secondary)',
   				foreground: 'var(--secondary-foreground)'
   			},
   			destructive: {
-  				DEFAULT: 'var(--destructive)',
+  				DEFAULT:    'var(--destructive)',
   				foreground: 'var(--destructive-foreground)'
   			},
   			border: 'var(--border)',
-  			input: 'var(--input)',
-  			ring: 'var(--ring)',
+  			input:  'var(--input)',
+  			ring:   'var(--ring)',
   			chart: {
   				'1': 'hsl(var(--chart-1))',
   				'2': 'hsl(var(--chart-2))',
@@ -76,12 +97,8 @@ export default {
   		},
   		keyframes: {
   			fadeIn: {
-  				'0%': {
-  					opacity: '0'
-  				},
-  				'100%': {
-  					opacity: '1'
-  				}
+  				'0%':   { opacity: '0' },
+  				'100%': { opacity: '1' }
   			}
   		},
   		borderRadius: {

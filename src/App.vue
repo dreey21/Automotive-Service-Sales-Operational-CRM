@@ -1,18 +1,18 @@
 <template>
-  <div class="fixed inset-0 bg-gray-950 flex overflow-hidden">
+  <div class="fixed inset-0 bg-background flex overflow-hidden">
     <!-- Sidebar Navigation (Desktop) -->
     <SidebarNavigation :tabs="navigationTabs" :is-collapsed="isSidebarCollapsed" />
 
     <!-- Main Content Area -->
     <div 
       class="flex-1 flex flex-col h-full transition-[margin] duration-300 ease-in-out overflow-hidden"
-      :class="isSidebarCollapsed ? 'md:ml-16' : 'md:ml-64'"
+      :class="isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'"
     >
       <!-- Dynamic Header -->
       <AppHeader @toggle-sidebar="toggleSidebar" />
 
       <!-- Main Content with proper scroll container -->
-      <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-950">
+      <main class="flex-1 overflow-y-auto overflow-x-hidden bg-background">
         <div class="min-h-full px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           <RouterView :is-sidebar-collapsed="isSidebarCollapsed" :all-services="mockDatabase" />
         </div>
@@ -49,7 +49,7 @@ const toggleSidebar = () => {
 <style>
 /* Ensure html and body have proper background */
 html, body {
-  background-color: #030712; /* gray-950 */
+  background-color: #F4F8FB; /* brand off-white */
   overflow: hidden;
   height: 100%;
   margin: 0;
@@ -58,7 +58,7 @@ html, body {
 
 #app {
   height: 100%;
-  background-color: #030712; /* gray-950 */
+  background-color: #F4F8FB; /* brand off-white */
 }
 
 /* Prevent overscroll bounce on mobile */
