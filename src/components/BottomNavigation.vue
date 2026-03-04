@@ -8,13 +8,13 @@
         :aria-current="isActive(tab.path) ? 'page' : undefined"
         :aria-label="tab.label"
         class="flex-1 flex flex-col items-center justify-center py-2.5 px-2 transition-all duration-200 relative"
-        :class="isActive(tab.path) ? 'text-brand-navy' : 'text-brand-ice hover:text-white'"
+        :class="isActive(tab.path) ? 'text-white' : 'text-white/50 hover:text-white'"
       >
         <!-- Active background pill -->
         <div
           :class="[
             'relative p-1.5 rounded-lg mb-0.5 transition-colors duration-200',
-            isActive(tab.path) ? 'bg-brand-sky/40' : 'bg-transparent'
+            isActive(tab.path) ? 'bg-white/10 border border-white/15' : 'bg-transparent'
           ]"
         >
           <component :is="getIcon(tab.icon)" class="w-5 h-5" />
@@ -23,7 +23,7 @@
         <span
           :class="[
             'text-[10px] tracking-wide transition-colors duration-200',
-            isActive(tab.path) ? 'text-brand-sky font-semibold' : 'text-brand-ice font-medium'
+            isActive(tab.path) ? 'text-white font-semibold' : 'text-white/50 font-medium'
           ]"
         >
           {{ tab.label }}

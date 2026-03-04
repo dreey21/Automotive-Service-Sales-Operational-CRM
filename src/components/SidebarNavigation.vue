@@ -1,6 +1,6 @@
 <template>
   <aside 
-    class="hidden md:flex md:flex-col fixed left-0 top-0 h-screen bg-[var(--foreground)] border-r border-border z-40 transition-[width] duration-300 ease-in-out overflow-hidden"
+    class="hidden md:flex md:flex-col fixed left-0 top-0 h-screen bg-[var(--foreground)] border-r border-border z-40 transition-[width] duration-300 ease-in-out overflow-hidden shadow-[4px_0_32px_0_rgba(0,0,0,0.4),2px_0_8px_0_rgba(0,0,0,0.25)]"
     :class="isCollapsed ? 'w-20' : 'w-64'"
   >
     <!-- Logo Section -->
@@ -32,15 +32,15 @@
             class="flex items-center rounded-lg text-sm font-medium transition-colors relative overflow-hidden px-3 py-2.5"
             :class="[
               isActive(tab.path)
-                ? 'bg-brand-sky text-brand-navy'
-                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'bg-white/10 text-white border border-white/15'
+                : 'text-white/75 hover:bg-white/[0.08] hover:text-white'
             ]"
             :title="isCollapsed ? tab.label : ''"
           >
             <!-- Icon -->
             <div 
               class="flex-shrink-0 transition-colors w-5 h-5"
-              :class="isActive(tab.path) ? 'text-brand-navy' : 'text-brand-ice'"
+              :class="isActive(tab.path) ? 'text-white' : 'text-brand-ice'"
             >
               <component :is="getIcon(tab.icon)" class="w-full h-full" />
             </div>
@@ -52,13 +52,6 @@
             >
               {{ tab.label }}
             </span>
-
-            <!-- Active indicator dot -->
-            <div 
-              v-if="isActive(tab.path)"
-              class="w-1.5 h-1.5 rounded-full bg-brand-navy ml-auto flex-shrink-0 transition-all duration-300"
-              :class="isCollapsed ? 'opacity-0 w-0' : 'opacity-100'"
-            />
           </RouterLink>
         </li>
       </ul>

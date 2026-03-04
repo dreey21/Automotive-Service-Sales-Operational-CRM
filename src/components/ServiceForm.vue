@@ -202,12 +202,12 @@
                         :class="[
                           'py-1.5 text-xs font-semibold border transition-all',
                           getPartType(job) === 'brand_new'
-                            ? 'bg-emerald-100 border-emerald-400 text-emerald-700'
+                            ? 'bg-green-100 border-green-300 text-green-900'
                             : 'bg-white border-border text-muted-foreground hover:border-emerald-300'
                         ]"
                         style="border-radius: 4px;"
                       >
-                        Brand New
+                        New
                       </button>
                       <button
                         type="button"
@@ -215,7 +215,7 @@
                         :class="[
                           'py-1.5 text-xs font-semibold border transition-all',
                           getPartType(job) === 'surplus'
-                            ? 'bg-amber-100 border-amber-400 text-amber-700'
+                            ? 'bg-amber-100 border-amber-200 text-amber-700'
                             : 'bg-white border-border text-muted-foreground hover:border-amber-300'
                         ]"
                         style="border-radius: 4px;"
@@ -228,7 +228,7 @@
                         :class="[
                           'py-1.5 text-xs font-semibold border transition-all',
                           getPartType(job) === 'owner'
-                            ? 'bg-brand-sky border-brand-ice text-brand-navy'
+                            ? 'bg-brand-sky border-brand-ice/30 text-brand-navy'
                             : 'bg-white border-border text-muted-foreground hover:border-brand-ice'
                         ]"
                         style="border-radius: 4px;"
@@ -829,15 +829,23 @@ function safeDeepClone(obj) {
   return JSON.parse(JSON.stringify(obj))
 }
 
+// ── Shared initializer so both onMounted and watchers use the same logic ──
+function initFormFromService(service) {
+  formData.value = safeDeepClone(service)
+  if (!formData.value.jobs_done) formData.value.jobs_done = []
+  if (!formData.value.owner_parts) formData.value.owner_parts = {}
+  if (!formData.value.part_condition) formData.value.part_condition = {}
+  selectedJobs.value = [...formData.value.jobs_done]
+  currentStep.value = 1
+  errors.value = {}
+  isServicesExpanded.value = false
+  initialFormSnapshot.value = JSON.stringify(formData.value)
+  hasUnsavedChanges.value = false
+}
+
 onMounted(() => {
   if (props.service) {
-    formData.value = safeDeepClone(props.service)
-    if (!formData.value.jobs_done) formData.value.jobs_done = []
-    if (!formData.value.owner_parts) formData.value.owner_parts = {}
-    if (!formData.value.part_condition) formData.value.part_condition = {}
-    selectedJobs.value = [...formData.value.jobs_done]
-    initialFormSnapshot.value = JSON.stringify(formData.value)
-    hasUnsavedChanges.value = false
+    initFormFromService(props.service)
   } else {
     formData.value.service_date = new Date().toISOString().split('T')[0]
     hasUnsavedChanges.value = false
@@ -855,17 +863,31 @@ onMounted(() => {
   })
 })
 
-watch(() => props.service, (newService) => {
-  if (newService && props.show) {
-    formData.value = safeDeepClone(newService)
-    if (!formData.value.jobs_done) formData.value.jobs_done = []
-    if (!formData.value.owner_parts) formData.value.owner_parts = {}
-    if (!formData.value.part_condition) formData.value.part_condition = {}
-    selectedJobs.value = [...formData.value.jobs_done]
-    initialFormSnapshot.value = JSON.stringify(formData.value)
-    hasUnsavedChanges.value = false
+// ── FIX: watch props.show becoming true to re-initialize the form.
+//         This handles the case where the user switches history entries
+//         while the form is closed — when they then click Edit, the form
+//         opens with the correct (newly selected) service data instead of
+//         whatever was loaded on first mount.
+watch(
+  () => props.show,
+  (isOpen) => {
+    if (isOpen && props.service) {
+      initFormFromService(props.service)
+    }
   }
-}, { deep: true })
+)
+
+// ── Keep in sync if the service prop changes while the form is already open
+//    (e.g. a save from a parent that updates the record in place).
+watch(
+  () => props.service,
+  (newService) => {
+    if (newService && props.show) {
+      initFormFromService(newService)
+    }
+  },
+  { deep: true }
+)
 
 watch(formData, () => {
   if (initialFormSnapshot.value) {
