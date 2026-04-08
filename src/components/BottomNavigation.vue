@@ -1,30 +1,30 @@
 <template>
-  <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-brand-navy border-t border-border z-50">
-    <div class="flex">
+  <nav
+    class="md:hidden fixed bottom-0 left-0 right-0 bg-brand-navy border-t border-border z-50"
+    style="padding-bottom: env(safe-area-inset-bottom)"
+  >
+    <div class="flex items-stretch">
       <RouterLink
         v-for="tab in tabs"
         :key="tab.id"
         :to="tab.path"
         :aria-current="isActive(tab.path) ? 'page' : undefined"
         :aria-label="tab.label"
-        class="flex-1 flex flex-col items-center justify-center py-2.5 px-2 transition-all duration-200 relative"
-        :class="isActive(tab.path) ? 'text-white' : 'text-white/50 hover:text-white'"
+        class="flex-1 flex flex-col items-center justify-center py-3 px-1.5 transition-colors duration-200 relative"
+        :class="isActive(tab.path) ? 'text-white' : 'text-white/40 hover:text-white/70'"
       >
-        <!-- Active background pill -->
-        <div
-          :class="[
-            'relative p-1.5 rounded-lg mb-0.5 transition-colors duration-200',
-            isActive(tab.path) ? 'bg-white/10 border border-white/15' : 'bg-transparent'
-          ]"
-        >
-          <component :is="getIcon(tab.icon)" class="w-5 h-5" />
+        <!-- Icon: swap outline → solid on active -->
+        <div class="relative z-10 mb-1">
+          <component
+            :is="isActive(tab.path) ? getSolidIcon(tab.icon) : getIcon(tab.icon)"
+            class="w-6 h-6 transition-all duration-200"
+          />
         </div>
 
+        <!-- Label -->
         <span
-          :class="[
-            'text-[10px] tracking-wide transition-colors duration-200',
-            isActive(tab.path) ? 'text-white font-semibold' : 'text-white/50 font-medium'
-          ]"
+          class="relative z-10 text-[11px] tracking-wide leading-none"
+          :class="isActive(tab.path) ? 'font-semibold text-white' : 'font-medium'"
         >
           {{ tab.label }}
         </span>
@@ -42,6 +42,13 @@ import {
   ChartBarIcon,
   Cog6ToothIcon
 } from '@heroicons/vue/24/outline'
+import {
+  UsersIcon as UsersIconSolid,
+  ClipboardDocumentListIcon as ClipboardDocumentListIconSolid,
+  HomeIcon as HomeIconSolid,
+  ChartBarIcon as ChartBarIconSolid,
+  Cog6ToothIcon as Cog6ToothIconSolid
+} from '@heroicons/vue/24/solid'
 
 const props = defineProps({
   tabs: { type: Array, required: true }
@@ -49,10 +56,28 @@ const props = defineProps({
 
 const route = useRoute()
 
-const iconMap = { UsersIcon, ClipboardDocumentListIcon, HomeIcon, ChartBarIcon, Cog6ToothIcon }
+const outlineIconMap = {
+  UsersIcon,
+  ClipboardDocumentListIcon,
+  HomeIcon,
+  ChartBarIcon,
+  Cog6ToothIcon
+}
+
+const solidIconMap = {
+  UsersIcon: UsersIconSolid,
+  ClipboardDocumentListIcon: ClipboardDocumentListIconSolid,
+  HomeIcon: HomeIconSolid,
+  ChartBarIcon: ChartBarIconSolid,
+  Cog6ToothIcon: Cog6ToothIconSolid
+}
 
 function getIcon(name) {
-  return iconMap[name] || HomeIcon
+  return outlineIconMap[name] || HomeIcon
+}
+
+function getSolidIcon(name) {
+  return solidIconMap[name] || HomeIconSolid
 }
 
 function isActive(path) {

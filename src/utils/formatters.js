@@ -2,6 +2,8 @@
  * Utility functions for formatting data
  */
 
+
+
 /**
  * Format a date string to human-readable format
  * @param {string} dateString - ISO date string
@@ -35,44 +37,62 @@ export function formatCurrency(amount, currency = '₱') {
   return `${currency}${amount.toFixed(2)}`
 }
 
-/**
- * Format phone number
- * @param {string} phone - Phone number
- * @returns {string} Formatted phone number
- */
-export function formatPhoneNumber(phone) {
-  if (!phone) return ''
-  
-  // Remove all non-digit characters
-  const cleaned = phone.replace(/\D/g, '')
-  
-  // Format as XXX-XXX-XXXX if 10 digits
-  if (cleaned.length === 10) {
-    return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 6)}-${cleaned.slice(6)}`
-  }
-  
-  return phone
+// Month Filtering Dropdown
+export const months = [
+  { value: '01', label: 'Jan' },
+  { value: '02', label: 'Feb' },
+  { value: '03', label: 'Mar' },
+  { value: '04', label: 'Apr' },
+  { value: '05', label: 'May' },
+  { value: '06', label: 'Jun' },
+  { value: '07', label: 'Jul' },
+  { value: '08', label: 'Aug' },
+  { value: '09', label: 'Sep' },
+  { value: '10', label: 'Oct' },
+  { value: '11', label: 'Nov' },
+  { value: '12', label: 'Dec' }
+]
+
+export function getMonthName(monthValue) {
+  const month = months.find(m => m.value === monthValue)
+  return month ? month.label : monthValue
 }
 
-/**
- * Truncate text with ellipsis
- * @param {string} text - Text to truncate
- * @param {number} maxLength - Maximum length
- * @returns {string} Truncated text
- */
-export function truncateText(text, maxLength = 50) {
-  if (!text || text.length <= maxLength) return text
-  return `${text.slice(0, maxLength)}...`
+//
+export const jobLabels = {
+  replace_evaporator_front: 'Evaporator Front',
+  replace_evaporator_rear: 'Evaporator Rear',
+  replace_condenser: 'Condenser',
+  replace_compressor: 'Compressor',
+  replace_blower_motor: 'Blower Motor',
+  replace_expansion_valve: 'Expansion Valve',
+  replace_pulley_assembly: 'Pulley Assembly',
+  replace_fan_motor: 'Fan Motor',
+  replace_suction_hose_assembly: 'Suction Hose Assembly',
+  replace_fan_belt: 'Fan Belt',
+  replace_filter_drier: 'Filter Drier',
+  replace_discharge_hose_suction: 'Discharge Hose Suction',
+  replace_ecv: 'ECV',
+  replace_oring: 'O-ring',
+  replace_radiator: 'Radiator',
+  replace_cabin_filter: 'Cabin Filter',
+  replace_magnetic: 'Magnetic',
+  pulldown_evaporator: 'Pulldown Evaporator',
+  pulldown_condenser: 'Pulldown Condenser',
+  pulldown_compressor: 'Pulldown Compressor',
+  flushing_system: 'Flushing System',
+  install_cabin_filter: 'Install Cabin Filter',
+  cleaning: 'Cleaning',
+  freon: 'Freon'
 }
 
-/**
- * Pluralize a word based on count
- * @param {number} count - Count
- * @param {string} singular - Singular form
- * @param {string} plural - Plural form (optional, defaults to singular + 's')
- * @returns {string} Pluralized word
- */
-export function pluralize(count, singular, plural) {
-  if (count === 1) return singular
-  return plural || `${singular}s`
+export function getJobsSummary(jobs) {
+  if (!jobs || jobs.length === 0) return 'No jobs'
+  if (jobs.length === 1) return jobLabels[jobs[0]] || jobs[0]
+  if (jobs.length === 2) return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]}`
+  if (jobs.length === 3) return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]}, ${jobLabels[jobs[2]] || jobs[2]}`
+  return `${jobLabels[jobs[0]] || jobs[0]}, ${jobLabels[jobs[1]] || jobs[1]} +${jobs.length - 2} more`
 }
+
+
+

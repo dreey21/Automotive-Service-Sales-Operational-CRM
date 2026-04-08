@@ -25,34 +25,51 @@
         isVisible ? 'modal-enter-to' : 'modal-enter-from modal-leave-to'
       ]"
     >
-      <!-- ─── HEADER — clean, single bar, no history strip ── -->
+      <!-- ─── HEADER — split to match content columns ── -->
       <div
-        class="bg-white px-4 py-3.5 flex items-center gap-3 flex-shrink-0"
-        style="position: relative; z-index: 1; border-bottom: 1px solid #c8dae6; box-shadow: 0 2px 12px 0 rgba(15,36,63,0.08), 0 1px 3px 0 rgba(15,36,63,0.06);"
+        class="flex-shrink-0 flex"
+        style="position: relative; z-index: 1;"
       >
-        <button
-          @click="close"
-          class="p-2 -ml-1.5 text-brand-ice hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
+        <!-- Left: fills remaining space naturally -->
+        <div class="bg-white px-4 py-3.5 flex items-center gap-3 flex-1" style="border-bottom: 1px solid #c8dae6; box-shadow: 0 2px 12px 0 rgba(15,36,63,0.08), 0 1px 3px 0 rgba(15,36,63,0.06);">
+          <button
+            @click="close"
+            class="p-2 -ml-1.5 text-brand-ice hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1
+            class="flex-1 text-lg font-extrabold text-brand-navy tracking-tight uppercase"
+            style="font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em;"
+          >
+            Service Details
+          </h1>
+          <button
+            @click="handleEdit"
+            class="p-2 -mr-1.5 text-brand-navy hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
+            title="Edit"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+        </div>
+        <!-- Right: fixed width matching the history sidebar -->
+        <div
+          v-if="jobHistory.length > 1"
+          class="hidden md:flex bg-white px-4 py-3.5 items-center justify-between w-64 lg:w-72 flex-shrink-0 border-l border-brand-navy/15 border-b border-b-brand-sky"
+          style="border-bottom: 1px solid white;"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-        <h1
-          class="flex-1 text-lg font-extrabold text-brand-navy tracking-tight uppercase"
-          style="font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em;"
-        >
-          Service Details
-        </h1>
-        <button
-          @click="handleEdit"
-          class="p-2 -mr-1.5 text-brand-navy hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
-          title="Edit"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-        </button>
+          <div class="flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-brand-ice" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest">Service History</p>
+          </div>
+          <span class="text-[10px] font-bold text-brand-navy bg-brand-sky px-1.5 py-0.5 rounded">{{ jobHistory.length }}</span>
+        </div>
       </div>
 
       <!--
@@ -60,15 +77,16 @@
         Rendered via Teleport to body inside the component,
         so it floats above everything including the modal.
       -->
-      <RecentServiceHistory
-        class="md:hidden"
-        v-if="currentService.plate_number && jobHistory.length > 1"
-        :jobs="jobHistory"
-        :current-job-id="currentService.id"
-        :plate-number="currentService.plate_number"
-        :visible="isVisible && !showEditForm"
-        @select-job="viewJob"
-      />
+      <div class="md:hidden">
+        <RecentServiceHistory
+          v-if="currentService.plate_number && jobHistory.length > 1"
+          :jobs="jobHistory"
+          :current-job-id="currentService.id"
+          :plate-number="currentService.plate_number"
+          :visible="isVisible && !showEditForm"
+          @select-job="viewJob"
+        />
+      </div>
 
       <!-- Body -->
       <div class="flex-1 overflow-hidden flex min-h-0">
@@ -145,6 +163,7 @@
             </div>
           </div>
 
+
           <div class="border-t border-brand-sky" />
 
           <!-- Customer -->
@@ -194,7 +213,7 @@
         <div class="hidden md:flex flex-1 overflow-hidden">
 
           <div class="flex-1 overflow-y-auto hide-scrollbar p-6 lg:p-8 bg-[#eef2f6]">
-            <div :class="jobHistory.length > 1 ? '' : 'max-w-2xl mx-auto'">
+            <div class="max-w-5xl mx-auto">
 
               <div class="flex items-start justify-between gap-6 mb-6 pb-6 border-b border-brand-sky">
                 <div>
@@ -227,8 +246,8 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-8 items-start">
-                <div class="space-y-6">
+              <div class="grid grid-cols-5 gap-8 items-start">
+                <div class="col-span-3 space-y-6">
                   <div>
                     <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest mb-3">Jobs Done</p>
                     <div v-if="currentService.jobs_done?.length" class="divide-y divide-brand-sky border border-brand-sky rounded-xl overflow-hidden bg-white shadow-sm">
@@ -255,23 +274,9 @@
                       <p class="text-sm text-brand-navy leading-relaxed whitespace-pre-wrap">{{ currentService.description }}</p>
                     </div>
                   </div>
-                  <div v-if="currentService.plate_number && jobHistory.length > 1" class="grid grid-cols-3 gap-3">
-                    <div class="bg-white border border-brand-sky rounded-xl px-4 py-3 shadow-sm">
-                      <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest mb-1">Total Visits</p>
-                      <p class="text-2xl font-extrabold text-brand-navy tabular-nums" style="font-family: 'Barlow Condensed', sans-serif;">{{ plateStats.totalVisits }}</p>
-                    </div>
-                    <div class="bg-white border border-brand-sky rounded-xl px-4 py-3 shadow-sm">
-                      <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest mb-1">First Service</p>
-                      <p class="text-sm font-bold text-brand-navy">{{ plateStats.firstService }}</p>
-                    </div>
-                    <div class="bg-white border border-brand-sky rounded-xl px-4 py-3 shadow-sm">
-                      <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest mb-1">Total Spent</p>
-                      <p class="text-sm font-extrabold text-green-600 tabular-nums">₱{{ plateStats.totalSpent }}</p>
-                    </div>
-                  </div>
                 </div>
 
-                <div class="space-y-4">
+                <div class="col-span-2 space-y-4">
                   <div>
                     <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest mb-3">Customer</p>
                     <div class="bg-white border border-brand-sky rounded-xl shadow-sm overflow-hidden">
@@ -315,17 +320,8 @@
           <!-- Desktop inline history panel -->
           <div
             v-if="jobHistory.length > 1"
-            class="w-64 lg:w-72 flex-shrink-0 border-l border-brand-sky flex flex-col overflow-hidden bg-white shadow-[-8px_0_20px_-4px_rgba(15,36,63,0.10)]"
+            class="w-64 lg:w-72 flex-shrink-0 border-l border-brand-navy/15 flex flex-col overflow-hidden bg-white "
           >
-            <div class="px-4 py-3 border-b border-brand-sky flex items-center justify-between flex-shrink-0">
-              <div class="flex items-center gap-2">
-                <svg class="w-3.5 h-3.5 text-brand-ice" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p class="text-[10px] font-semibold text-brand-ice uppercase tracking-widest">Service History</p>
-              </div>
-              <span class="text-[10px] font-bold text-brand-navy bg-brand-sky px-1.5 py-0.5 rounded">{{ jobHistory.length }}</span>
-            </div>
             <div class="flex-1 overflow-y-auto hide-scrollbar p-2">
               <template v-for="yearGroup in historyByYear" :key="yearGroup.year">
                 <div class="flex items-center gap-2 px-2 py-1.5">
@@ -469,15 +465,6 @@ const warrantyStatus = computed(() => {
   return days <= 30 ? 'active' : 'expired'
 })
 
-const plateStats = computed(() => {
-  if (!jobHistory.value.length) return { totalVisits: 0, firstService: 'N/A', totalSpent: '0.00' }
-  const sorted = [...jobHistory.value].sort((a, b) => new Date(a.service_date) - new Date(b.service_date))
-  return {
-    totalVisits: jobHistory.value.length,
-    firstService: formatDate(sorted[0].service_date),
-    totalSpent: jobHistory.value.reduce((s, j) => s + (j.cost || 0), 0).toFixed(2)
-  }
-})
 
 function getJobLabel(k)        { return jobLabels[k] || k }
 function getJobPartDetails(k)  {
