@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 
 /**
  * Debounce composable for delaying reactive updates
@@ -7,18 +7,26 @@ import { ref } from 'vue'
  */
 
 export function useDebounce(delay=300) {
-    const debouncedValue = ref ("");
+    const debouncedValue = ref ('');
     let timeoutId = null;
 
-    const setValue = (newValue) => {
+    onUnmounted(() => clearTimeout(timeoutId))
+
+    function setValue(newValue) {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
           debouncedValue.value = newValue;
         }, delay); 
     };
     
+    function reset() {
+        clearTimeout(timeoutId)  // cancel any pending timer
+        debouncedValue.value = ''
+    }
+
     return {
         debouncedValue,
         setValue,
+        reset
     }
 }

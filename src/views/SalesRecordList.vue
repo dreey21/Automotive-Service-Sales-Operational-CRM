@@ -7,11 +7,11 @@
           Recent Transactions
         </h2>
         <p class="text-xs text-muted-foreground mt-0.5">
-          <span v-if="debouncedSearchQuery || selectedMonth || selectedYear">
-            {{ totalResults }} result{{ totalResults !== 1 ? 's' : '' }} found
+          <span v-if="hasActiveFilters">
+            {{ filteredServices.length }} result{{ filteredServices.length !== 1 ? 's' : '' }} found
           </span>
           <span v-else>
-            {{ totalResults }} total record{{ totalResults !== 1 ? 's' : '' }}
+            {{ filteredServices.length }} total record{{ filteredServices.length !== 1 ? 's' : '' }}
           </span>
         </p>
       </div>
@@ -140,7 +140,7 @@
 
         <!-- Clear Filters Button -->
         <button
-          v-if="selectedMonth || selectedYear || debouncedSearchQuery"
+          v-if="hasActiveFilters"
           @click="clearFilters"
           class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           style="border-radius: 6px;"
@@ -428,11 +428,11 @@
         <!-- Mobile Pagination -->
         <div v-if="totalPages > 1" class="mt-4 pb-20 flex flex-col items-center gap-4">
           <div class="text-sm font-medium text-muted-foreground tabular-nums">
-            Showing {{ startIndex + 1 }}–{{ Math.min(endIndex, totalResults) }} of <span class="text-foreground font-semibold">{{ totalResults }}</span> results
+            Showing {{ startIndex + 1 }}–{{ Math.min(endIndex, filteredServices.length) }} of <span class="text-foreground font-semibold">{{ filteredServices.length }}</span> results
           </div>
           <Pagination
             v-slot="{ page }"
-            :total="totalResults"
+            :total="filteredServices.length"
             :items-per-page="ITEMS_PER_PAGE"
             :sibling-count="1"
             :show-edges="true"
@@ -613,11 +613,11 @@
     <!-- Pagination Controls - Desktop -->
     <div v-if="totalPages > 1" class="hidden md:flex mt-4 flex-col sm:flex-row items-center justify-between gap-4">
       <div class="text-sm font-medium text-muted-foreground tabular-nums">
-        Showing {{ startIndex + 1 }}–{{ Math.min(endIndex, totalResults) }} of <span class="text-foreground font-semibold">{{ totalResults }}</span> results
+        Showing {{ startIndex + 1 }}–{{ Math.min(endIndex, filteredServices.length) }} of <span class="text-foreground font-semibold">{{ filteredServices.length }}</span> results
       </div>
       <Pagination
         v-slot="{ page }"
-        :total="totalResults"
+        :total="filteredServices.length"
         :items-per-page="ITEMS_PER_PAGE"
         :sibling-count="1"
         :show-edges="true"
@@ -692,15 +692,15 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { useDebounce } from '@/composables/useDebounce'
-import { getMonthName, months, getJobsSummary, jobLabels, formatDate } from '@/utils/formatters.js'
+import { getMonthName, months, getJobsSummary, formatDate } from '@/utils/formatters.js'
+import { useSwipeGesture } from '@/composables/useSwipeGesture'
+import { useServiceFilter } from '@/composables/useServiceFilter'
 import ServiceForm from '../components/ServiceForm.vue'
 import ViewDetailsModal from '../components/ViewDetailsModal.vue'
 import ToastNotification from '../components/ToastNotification.vue'
 import SearchBar from "@/components/common/inputs/SearchBar.vue";
 import EmptyState from '@/components/common/feedback/EmptyState.vue'
 import PartConditionBadge from '@/components/features/sales/widgets/PartConditionBadge.vue'
-import { useSwipeGesture } from '@/composables/useSwipeGesture'
 import JobHistoryBadge from '@/components/features/sales/widgets/JobHistoryBadge.vue'
 import {
   Pagination,
@@ -732,6 +732,7 @@ const props = defineProps({
   }
 })
 
+// Destructured from useSwipeGesture
 const {
   setCardRef,
   setButtonRef,
@@ -745,6 +746,25 @@ const {
   openViewModal(service) 
 })
 
+// Filtered state & actions from useServiceFilter
+const {
+  selectedMonth,
+  selectedYear,
+  showMonthDropdown,
+  showYearDropdown,
+  searchQuery,
+  toggleMonthDropdown,
+  toggleYearDropdown,
+  currentPage,
+  filteredServices,
+  selectMonth,
+  selectYear,
+  availableYears,
+  hasActiveFilters,
+  clearFilters,
+  clearCache
+} = useServiceFilter(mockDatabase)
+
 const ITEMS_PER_PAGE = 50
 const mobileScrollContainerRef = ref(null)
 const desktopScrollContainerRef = ref(null)
@@ -752,86 +772,17 @@ const initialLoading = ref(true)
 const showModal = ref(false)
 const showViewModal = ref(false)
 const selectedService = ref(null)
-const viewService = ref(null)
-const searchQuery = ref('')                     
-const openMenuId = ref(null)
-const currentPage = ref(1)
-const totalResults = ref(0)
-const selectedMonth = ref('')                  
-const selectedYear = ref('')                   
+const viewService = ref(null)                    
 const error = ref(null)
-const showMonthDropdown = ref(false)
-const showYearDropdown = ref(false)
 const monthDropdownRef = ref(null)
 const yearDropdownRef = ref(null)
-
 const showToast = ref(false)
 const toastMessage = ref('')
 const toastVariant = ref('success')
 const showDeleteDialog = ref(false)
 const selectedDeleteId = ref(null)
 
-const indexedRecords = computed(() => {
-  return mockDatabase.map(record => ({
-    ...record,
-    searchableText: [
-      record.customer_name,
-      record.phone,
-      record.car_model,
-      record.plate_number,
-      record.invoice,
-      ...(record.jobs_done || []).map(job => jobLabels[job])
-    ]
-      .filter(Boolean)
-      .join(' ')
-      .toLowerCase()
-  }))
-})
 
-const filteredCache = ref(new Map())
-
-const hasActiveFilters = computed(() => 
-  !!(debouncedSearchQuery.value || selectedMonth.value || selectedYear.value)
-)
-
-function getFilteredRecords(query = '', month = '', year = '') {
-  const key = `${query}|${month}|${year}`
-  
-  if (filteredCache.value.has(key)) {
-    return filteredCache.value.get(key)
-  }
-  
-  let filtered = indexedRecords.value
-
-  if (year) {
-    filtered = filtered.filter(s => s.service_date?.startsWith(year))
-  }
-
-  if (month) {
-    filtered = filtered.filter(s => s.service_date?.split('-')[1] === month)
-  }
-
-  if (query) {
-    const q = query.toLowerCase()
-    filtered = filtered.filter(s => s.searchableText.includes(q))
-  }
-
-  const result = filtered
-    .slice()
-    .sort((a, b) => new Date(b.service_date) - new Date(a.service_date))
-  
-  if (filteredCache.value.size > 50) {
-    const firstKey = filteredCache.value.keys().next().value
-    filteredCache.value.delete(firstKey)
-  }
-  filteredCache.value.set(key, result)
-  
-  return result
-}
-
-const filteredServices = computed(() => {
-  return getFilteredRecords(debouncedSearchQuery.value, selectedMonth.value, selectedYear.value)
-})
 
 function showToastNotification(message, variant = 'success') {
   toastMessage.value = message
@@ -873,16 +824,6 @@ function getPartDetailsDisplay(service, maxVisible = 3) {
   }
 }
 
-const availableYears = computed(() => {
-  const years = new Set()
-  mockDatabase.forEach(service => {
-    if (service.service_date) {
-      years.add(service.service_date.split('-')[0])
-    }
-  })
-  return Array.from(years).sort((a, b) => b - a)
-})
-
 const totalPages = computed(() => Math.ceil(filteredServices.value.length / ITEMS_PER_PAGE))
 const startIndex = computed(() => (currentPage.value - 1) * ITEMS_PER_PAGE)
 const endIndex = computed(() => startIndex.value + ITEMS_PER_PAGE)
@@ -902,38 +843,15 @@ function viewJobFromHistory(job) {
   viewService.value = job 
 }
 
-function clearFilters() {
-  selectedMonth.value = ''
-  selectedYear.value = ''
-  searchQuery.value = ''
-  debouncedSearchQuery.value = ''
-}
-
-const { debouncedValue: debouncedSearchQuery, setValue: setSearchQuery } = useDebounce(300)
-
-watch(searchQuery, (newQuery) => {
-  setSearchQuery(newQuery)
-  currentPage.value = 1
-})
-
-watch([selectedMonth, selectedYear], () => {
-  currentPage.value = 1
-})
-
 watch(currentPage, async () => {
   await nextTick()
   if (mobileScrollContainerRef.value) mobileScrollContainerRef.value.scrollTop = 0
   if (desktopScrollContainerRef.value) desktopScrollContainerRef.value.scrollTop = 0
 })
 
-watch(filteredServices, (newVal) => {
-  totalResults.value = newVal.length
-}, { immediate: true })
-
 onMounted(() => {
   initialLoading.value = true
   setTimeout(() => {
-    totalResults.value = filteredServices.value.length
     initialLoading.value = false
   }, 300)
   document.addEventListener('click', handleClickOutside)
@@ -943,20 +861,18 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-function toggleMenu(id) {
-  openMenuId.value = openMenuId.value === id ? null : id
-}
+
 
 function openAddModal() {
   selectedService.value = null
   showModal.value = true
-  openMenuId.value = null
+  
 }
 
 function openViewModal(service) {
   viewService.value = { ...service }
   showViewModal.value = true
-  openMenuId.value = null
+  
 }
 
 function closeViewModal() {
@@ -968,7 +884,6 @@ function openEditModal(service) {
   selectedService.value = { ...service }
   showModal.value = true
   showViewModal.value = false
-  openMenuId.value = null
 }
 
 function handleEditFromView(service) {
@@ -984,18 +899,17 @@ function closeModal() {
 }
 
 async function handleSave(serviceData) {
-  const tempId = `temp-${Date.now()}`
   const isEditMode = !!serviceData.id
 
   if (isEditMode) {
     const dbIndex = mockDatabase.findIndex(s => s.id === serviceData.id)
     if (dbIndex !== -1) mockDatabase[dbIndex] = { ...serviceData }
-    filteredCache.value.clear()
+    clearCache()
     showToastNotification('Record has been updated successfully', 'success')
   } else {
     const newService = {
       ...serviceData,
-      id: tempId,
+      id: `temp-${Date.now()}`,
       loading: true,
       created_at: new Date().toISOString().split('T')[0]
     }
@@ -1005,7 +919,7 @@ async function handleSave(serviceData) {
       const newId = Math.max(...mockDatabase.map(s => s.id), 0) + 1
       const savedService = { ...newService, id: newId, loading: false }
       mockDatabase.unshift(savedService)
-      filteredCache.value.clear()
+      clearCache()
       showToastNotification('New record created successfully', 'success')
     } catch (err) {
       error.value = 'Failed to save record. Please try again.'
@@ -1020,14 +934,13 @@ async function handleSave(serviceData) {
 function deleteService(id) {
   selectedDeleteId.value = id
   showDeleteDialog.value = true
-  openMenuId.value = null
 }
 
 function confirmDelete() {
   if (selectedDeleteId.value) {
     const dbIndex = mockDatabase.findIndex(s => s.id === selectedDeleteId.value)
     if (dbIndex !== -1) mockDatabase.splice(dbIndex, 1)
-    filteredCache.value.clear()
+    clearCache()
     showToastNotification('Record deleted successfully', 'success')
     selectedDeleteId.value = null
     showDeleteDialog.value = false
@@ -1035,8 +948,7 @@ function confirmDelete() {
 }
 
 function handleClickOutside(event) {
-  openMenuId.value = null
-  closeOpenSwipe()  // from the composable
+  closeOpenSwipe()  
 
   if (monthDropdownRef.value && !monthDropdownRef.value.contains(event.target)) {
     showMonthDropdown.value = false
@@ -1044,26 +956,6 @@ function handleClickOutside(event) {
   if (yearDropdownRef.value && !yearDropdownRef.value.contains(event.target)) {
     showYearDropdown.value = false
   }
-}
-
-function toggleMonthDropdown() {
-  showMonthDropdown.value = !showMonthDropdown.value
-  showYearDropdown.value = false
-}
-
-function toggleYearDropdown() {
-  showYearDropdown.value = !showYearDropdown.value
-  showMonthDropdown.value = false
-}
-
-function selectMonth(month) {
-  selectedMonth.value = selectedMonth.value === month ? '' : month
-  showMonthDropdown.value = false
-}
-
-function selectYear(year) {
-  selectedYear.value = selectedYear.value === year ? '' : year
-  showYearDropdown.value = false
 }
 
 </script>

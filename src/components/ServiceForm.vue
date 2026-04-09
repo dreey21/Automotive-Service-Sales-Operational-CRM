@@ -949,6 +949,7 @@ function handleNext() {
 
 function handleSubmit() {
   const dataToSave = { ...formData.value }
+  dataToSave.plate_number = dataToSave.plate_number.trim().toUpperCase()
   const now = new Date().toISOString().split('T')[0]
   if (props.service?.id) { dataToSave.id = props.service.id; dataToSave.created_at = props.service.created_at; dataToSave.updated_at = now; dataToSave.updated_by = 'admin' }
   else { dataToSave.created_at = now; dataToSave.updated_at = now; dataToSave.updated_by = 'admin' }
