@@ -370,8 +370,8 @@
                         {{ service.plate_number || 'Walk-in' }}
                       </h3>
                       <JobHistoryBadge 
-                        v-if="hasJobHistory(service.plate_number)" 
-                        :job-count="getJobCount(service.plate_number)"
+                        v-if="hasJobHistory(service.plate_number, mockDatabase)" 
+                        :job-count="getJobCount(service.plate_number, mockDatabase)"
                       />
                     </div>
                     <span class="text-xs font-bold text-muted-foreground flex-shrink-0">
@@ -526,7 +526,7 @@
                       <span class="text-sm font-extrabold text-foreground tracking-wider whitespace-nowrap group-hover:text-brand-navy transition-colors duration-200">
                         {{ service.plate_number || '—' }}
                       </span>
-                      <JobHistoryBadge v-if="hasJobHistory(service.plate_number)" :job-count="getJobCount(service.plate_number)"/>
+                      <JobHistoryBadge v-if="hasJobHistory(service.plate_number, mockDatabase)" :job-count="getJobCount(service.plate_number, mockDatabase)"/>
                     </div>
                   </div>
                 </td>
@@ -668,7 +668,7 @@
       :message="toastMessage"
       :variant="toastVariant"
       :duration="3000"
-      @close="showToast = false"
+      @close="closeToast"
     />
 
     <AlertDialog v-model:open="showDeleteDialog">
@@ -694,8 +694,11 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { getMonthName, months, getJobsSummary, formatDate } from '@/utils/formatters.js'
 import { getPartDetailsDisplay, hasPartConditions } from '@/utils/partConditions'
+import { hasJobHistory, getJobCount } from '@/utils/jobHistory'
 import { useSwipeGesture } from '@/composables/useSwipeGesture'
 import { useServiceFilter } from '@/composables/useServiceFilter'
+import { useToast } from '@/composables/useToast'
+import { useDeleteConfirmation } from '@/composables/useDeleteConfirmation'
 import ServiceForm from '../components/ServiceForm.vue'
 import ViewDetailsModal from '../components/ViewDetailsModal.vue'
 import ToastNotification from '../components/ToastNotification.vue'
@@ -725,6 +728,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { mockDatabase } from '../data/mockData.js'
+import { Database } from 'lucide-vue-next'
 
 const props = defineProps({
   isSidebarCollapsed: {
@@ -766,6 +770,22 @@ const {
   clearCache
 } = useServiceFilter(mockDatabase)
 
+// ToastNotification states and functions from useToast
+const {
+  showToast,
+  toastMessage,
+  toastVariant,
+  showToastNotification,
+  closeToast
+}= useToast()
+
+// Delete confirmation state and functions from useDeleteConfirmation
+const{
+  deleteService,
+  confirmDelete,
+  showDeleteDialog
+}= useDeleteConfirmation (mockDatabase, clearCache, showToastNotification)
+
 const ITEMS_PER_PAGE = 50
 const mobileScrollContainerRef = ref(null)
 const desktopScrollContainerRef = ref(null)
@@ -777,34 +797,10 @@ const viewService = ref(null)
 const error = ref(null)
 const monthDropdownRef = ref(null)
 const yearDropdownRef = ref(null)
-const showToast = ref(false)
-const toastMessage = ref('')
-const toastVariant = ref('success')
-const showDeleteDialog = ref(false)
-const selectedDeleteId = ref(null)
-
-
-
-function showToastNotification(message, variant = 'success') {
-  toastMessage.value = message
-  toastVariant.value = variant
-  showToast.value = true
-}
-
 const totalPages = computed(() => Math.ceil(filteredServices.value.length / ITEMS_PER_PAGE))
 const startIndex = computed(() => (currentPage.value - 1) * ITEMS_PER_PAGE)
 const endIndex = computed(() => startIndex.value + ITEMS_PER_PAGE)
 const paginatedServices = computed(() => filteredServices.value.slice(startIndex.value, endIndex.value))
-
-function hasJobHistory(plateNumber) {
-  if (!plateNumber) return false
-  return mockDatabase.filter(s => s.plate_number === plateNumber).length > 1
-}
-
-function getJobCount(plateNumber) {
-  if (!plateNumber) return 0
-  return mockDatabase.filter(s => s.plate_number === plateNumber).length
-}
 
 function viewJobFromHistory(job) {
   viewService.value = job 
@@ -827,8 +823,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-
-
 
 function openAddModal() {
   selectedService.value = null
@@ -896,22 +890,6 @@ async function handleSave(serviceData) {
   }
 
   closeModal()
-}
-
-function deleteService(id) {
-  selectedDeleteId.value = id
-  showDeleteDialog.value = true
-}
-
-function confirmDelete() {
-  if (selectedDeleteId.value) {
-    const dbIndex = mockDatabase.findIndex(s => s.id === selectedDeleteId.value)
-    if (dbIndex !== -1) mockDatabase.splice(dbIndex, 1)
-    clearCache()
-    showToastNotification('Record deleted successfully', 'success')
-    selectedDeleteId.value = null
-    showDeleteDialog.value = false
-  }
 }
 
 function handleClickOutside(event) {
