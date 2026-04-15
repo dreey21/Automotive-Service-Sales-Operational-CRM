@@ -456,67 +456,14 @@
         </div>
       </div>
 
-      <!-- Desktop: Table -->
-      <div class="hidden md:block h-[calc(100vh-410px)] bg-card border border-border" style="border-radius: 6px;">
-        <!-- Sticky Table Header -->
-        <div class="border-b border-border bg-[var(--foreground)]">
-          <table class="w-full border-collapse table-fixed">
-            <colgroup>
-              <col style="width: 200px;">
-              <col style="width: 140px;">
-              <col style="width: auto;">
-              <col style="width: 140px;">
-              <col style="width: 180px;">
-              <col style="width: 140px;">
-              <col style="width: 180px;">
-              <col style="width: 48px;">
-            </colgroup>
-            <thead>
-              <tr>
-                <th class="h-10 pl-10 pr-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Plate No.</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Date</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Jobs Done</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Phone</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Part Details</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Cost</th>
-                <th class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider">Vehicle</th>
-                <th class="h-10 w-[48px]"></th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-        
-        <!-- Scrollable Table Body -->
-        <div 
-          ref="desktopScrollContainerRef"
-          class="overflow-y-auto" 
-          style="height: calc(100% - 40px);"
-        >
-          <table class="w-full border-collapse table-fixed">
-            <colgroup>
-              <col style="width: 200px;">
-              <col style="width: 140px;">
-              <col style="width: auto;">
-              <col style="width: 140px;">
-              <col style="width: 180px;">
-              <col style="width: 140px;">
-              <col style="width: 180px;">
-              <col style="width: 48px;">
-            </colgroup>
-            <tbody>
-              <DesktopTableRow
-                v-for="service in paginatedServices"
-                :key="`row-${service.id}`"
-                :service="service"
-                :database="mockDatabase"
-                @view="openViewModal"
-                @edit="openEditModal"
-                @delete="deleteService"
-              />
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DesktopTable
+        :paginatedServices="paginatedServices"
+        :currentPage="currentPage"
+        :database="mockDatabase"
+        @view="openViewModal"
+        @edit="openEditModal"
+        @delete="deleteService"
+      />
     </template>
 
     <!-- Pagination Controls - Desktop -->
@@ -607,9 +554,8 @@ import SearchBar from "@/components/common/inputs/SearchBar.vue";
 import EmptyState from '@/components/common/feedback/EmptyState.vue'
 import PartConditionBadge from '@/components/features/sales/widgets/PartConditionBadge.vue'
 import JobHistoryBadge from '@/components/features/sales/widgets/JobHistoryBadge.vue'
-import DesktopTableRow from '@/components/features/sales/desktop/DesktopTableRow.vue'
-
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import DesktopTable from '@/components/features/sales/desktop/DesktopTable.vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick} from 'vue'
 import { getMonthName, months, getJobsSummary, formatDate } from '@/utils/formatters.js'
 import { getPartDetailsDisplay, hasPartConditions } from '@/utils/partConditions'
 import { hasJobHistory, getJobCount } from '@/utils/jobHistory'
@@ -698,7 +644,7 @@ const{
 
 const ITEMS_PER_PAGE = 50
 const mobileScrollContainerRef = ref(null)
-const desktopScrollContainerRef = ref(null)
+
 const initialLoading = ref(true)
 const showModal = ref(false)
 const showViewModal = ref(false)
@@ -719,7 +665,6 @@ function viewJobFromHistory(job) {
 watch(currentPage, async () => {
   await nextTick()
   if (mobileScrollContainerRef.value) mobileScrollContainerRef.value.scrollTop = 0
-  if (desktopScrollContainerRef.value) desktopScrollContainerRef.value.scrollTop = 0
 })
 
 onMounted(() => {
