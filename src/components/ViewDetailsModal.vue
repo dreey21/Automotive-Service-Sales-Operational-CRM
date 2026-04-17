@@ -31,7 +31,7 @@
         style="position: relative; z-index: 1;"
       >
         <!-- Left: fills remaining space naturally -->
-        <div class="bg-white px-4 py-3.5 flex items-center gap-3 flex-1" style="border-bottom: 1px solid #c8dae6; box-shadow: 0 2px 12px 0 rgba(15,36,63,0.08), 0 1px 3px 0 rgba(15,36,63,0.06);">
+        <div class="bg-brand-navy px-4 py-3.5 flex items-center gap-3 flex-1">
           <button
             @click="close"
             class="p-2 -ml-1.5 text-brand-ice hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
@@ -41,14 +41,14 @@
             </svg>
           </button>
           <h1
-            class="flex-1 text-lg font-extrabold text-brand-navy tracking-tight uppercase"
+            class="flex-1 text-lg font-extrabold text-white tracking-tight uppercase"
             style="font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.05em;"
           >
             Service Details
           </h1>
           <button
             @click="handleEdit"
-            class="p-2 -mr-1.5 text-brand-navy hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
+            class="p-2 -mr-1.5 text-white hover:bg-brand-sky rounded-lg transition-colors flex-shrink-0"
             title="Edit"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
