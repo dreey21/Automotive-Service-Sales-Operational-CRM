@@ -48,180 +48,16 @@
     </div>
 
     <!-- Search + Filter Toolbar -->
-    <div class="mb-4">
-      <!-- Mobile: Search full width on its own row -->
-      <div class="mb-2 md:hidden">
-        <SearchBar
-          v-model="searchQuery"
-          placeholder="Search plate number, customer, invoice..."
-        />
-      </div>
-
-      <!-- Filter row: desktop includes search inline, mobile just filters -->
-      <div class="flex flex-wrap items-center gap-2">
-        <!-- Search: desktop only, inline -->
-        <div class="hidden md:block w-72">
-          <SearchBar
-            v-model="searchQuery"
-            placeholder="Search plate number, customer, invoice..."
-          />
-        </div>
-
-        <!-- Month Filter Dropdown -->
-        <div class="relative" ref="monthDropdownRef">
-          <button
-            @click="toggleMonthDropdown"
-            :class="[
-              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border transition-colors',
-              selectedMonth
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card text-foreground border-border hover:border-primary',
-            ]"
-            style="border-radius: 6px"
-          >
-            <svg
-              class="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>{{
-              selectedMonth ? getMonthName(selectedMonth) : "Month"
-            }}</span>
-            <svg
-              class="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-
-          <!-- Month Dropdown -->
-          <div
-            v-if="showMonthDropdown"
-            class="absolute top-full left-0 mt-1 bg-white border border-border shadow-md z-20 min-w-[140px] max-h-[280px] overflow-y-auto"
-            style="border-radius: 6px"
-            @click.stop
-          >
-            <button
-              v-for="month in months"
-              :key="month.value"
-              @click="selectMonth(month.value)"
-              :class="[
-                'w-full px-3 py-2 text-left text-sm transition-colors',
-                selectedMonth === month.value
-                  ? 'bg-brand-sky text-brand-navy font-medium'
-                  : 'text-foreground hover:bg-muted',
-              ]"
-            >
-              {{ month.label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Year Filter Dropdown -->
-        <div class="relative" ref="yearDropdownRef">
-          <button
-            @click="toggleYearDropdown"
-            :class="[
-              'flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border transition-colors',
-              selectedYear
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-card text-foreground border-border hover:border-primary',
-            ]"
-            style="border-radius: 6px"
-          >
-            <svg
-              class="w-3.5 h-3.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span>{{ selectedYear || "Year" }}</span>
-            <svg
-              class="w-3 h-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              stroke-width="2.5"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-
-          <!-- Year Dropdown -->
-          <div
-            v-if="showYearDropdown"
-            class="absolute top-full left-0 mt-1 bg-white border border-border shadow-md z-20 min-w-[100px]"
-            style="border-radius: 6px"
-            @click.stop
-          >
-            <button
-              v-for="year in availableYears"
-              :key="year"
-              @click="selectYear(year)"
-              :class="[
-                'w-full px-3 py-2 text-left text-sm transition-colors',
-                selectedYear === year
-                  ? 'bg-brand-sky text-brand-navy font-medium'
-                  : 'text-foreground hover:bg-muted',
-              ]"
-            >
-              {{ year }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Clear Filters Button -->
-        <button
-          v-if="hasActiveFilters"
-          @click="clearFilters"
-          class="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          style="border-radius: 6px"
-        >
-          <svg
-            class="w-3.5 h-3.5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            stroke-width="2.5"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-          Clear filters
-        </button>
-      </div>
-    </div>
-
+    <FilterToolbar
+      :selectedMonth="selectedMonth"
+      :selectedYear="selectedYear"
+      :availableYears="availableYears"
+      :hasActiveFilters="hasActiveFilters"
+      v-model:searchQuery="searchQuery"
+      @clear-filters="clearFilters"
+      @select-month="selectMonth"
+      @select-year="selectYear"
+    />
     <!-- Error State -->
     <div
       v-if="error"
@@ -234,257 +70,10 @@
     <!-- ─── LOADING SKELETONS ─── -->
     <template v-if="initialLoading">
       <!-- Mobile skeleton -->
-      <div class="md:hidden h-[calc(100vh-380px)] pb-20 overflow-y-auto">
-        <div class="space-y-2">
-          <template v-for="i in 8" :key="`skel-card-${i}`">
-            <!-- Cards with badge (indices 2, 4, 7 — mimics ~every 2-3 cards having a badge) -->
-            <div
-              v-if="[2, 4, 7].includes(i)"
-              class="bg-card border border-border p-2.5 animate-pulse"
-              style="border-radius: 6px"
-            >
-              <!-- Row 1: Plate + Date -->
-              <div class="flex items-baseline justify-between mb-1">
-                <div
-                  class="h-[18px] bg-muted w-28"
-                  style="border-radius: 3px"
-                ></div>
-                <div class="h-3 bg-muted w-20" style="border-radius: 3px"></div>
-              </div>
-              <!-- Row 2: Jobs done -->
-              <div class="flex items-center gap-1.5 mb-1">
-                <div
-                  class="h-3.5 bg-muted w-3.5 flex-shrink-0"
-                  style="border-radius: 3px"
-                ></div>
-                <div
-                  class="h-3 bg-muted w-2/3"
-                  style="border-radius: 3px"
-                ></div>
-              </div>
-              <!-- Row 3: Badge row -->
-              <div class="flex gap-1 mb-1">
-                <div class="h-5 bg-muted w-16" style="border-radius: 4px"></div>
-                <div
-                  v-if="i === 4"
-                  class="h-5 bg-muted w-20"
-                  style="border-radius: 4px"
-                ></div>
-              </div>
-              <!-- Row 4: Vehicle + Cost -->
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <div
-                    class="h-3.5 bg-muted w-3.5 flex-shrink-0"
-                    style="border-radius: 3px"
-                  ></div>
-                  <div
-                    class="h-3 bg-muted w-36"
-                    style="border-radius: 3px"
-                  ></div>
-                </div>
-                <div
-                  class="h-5 bg-muted w-20 flex-shrink-0"
-                  style="border-radius: 3px"
-                ></div>
-              </div>
-            </div>
-
-            <!-- Cards without badge (regular 3-row height) -->
-            <div
-              v-else
-              class="bg-card border border-border p-2.5 animate-pulse"
-              style="border-radius: 6px"
-            >
-              <!-- Row 1: Plate + Date -->
-              <div class="flex items-baseline justify-between mb-1">
-                <div
-                  class="h-[18px] bg-muted w-24"
-                  style="border-radius: 3px"
-                ></div>
-                <div class="h-3 bg-muted w-20" style="border-radius: 3px"></div>
-              </div>
-              <!-- Row 2: Jobs done -->
-              <div class="flex items-center gap-1.5 mb-1">
-                <div
-                  class="h-3.5 bg-muted w-3.5 flex-shrink-0"
-                  style="border-radius: 3px"
-                ></div>
-                <div
-                  class="h-3 bg-muted"
-                  :style="{
-                    width: [1, 3, 6].includes(i) ? '45%' : '60%',
-                    borderRadius: '3px',
-                  }"
-                ></div>
-              </div>
-              <!-- Row 3: Vehicle + Cost -->
-              <div class="flex items-center justify-between gap-2">
-                <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                  <div
-                    class="h-3.5 bg-muted w-3.5 flex-shrink-0"
-                    style="border-radius: 3px"
-                  ></div>
-                  <div
-                    class="h-3 bg-muted"
-                    :style="{
-                      width: [1, 5].includes(i) ? '7rem' : '9rem',
-                      borderRadius: '3px',
-                    }"
-                  ></div>
-                </div>
-                <div
-                  class="h-5 bg-muted w-16 flex-shrink-0"
-                  style="border-radius: 3px"
-                ></div>
-              </div>
-            </div>
-          </template>
-        </div>
-      </div>
+      <MobileCardSkeleton />
 
       <!-- Desktop skeleton -->
-      <div
-        class="hidden md:block h-[calc(100vh-410px)] bg-card border border-border"
-        style="border-radius: 6px"
-      >
-        <div class="border-b border-border bg-[var(--foreground)]">
-          <table class="w-full border-collapse table-fixed">
-            <colgroup>
-              <col style="width: 200px" />
-              <col style="width: 140px" />
-              <col style="width: auto" />
-              <col style="width: 140px" />
-              <col style="width: 180px" />
-              <col style="width: 140px" />
-              <col style="width: 180px" />
-              <col style="width: 48px" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th
-                  class="h-10 pl-10 pr-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Plate No.
-                </th>
-                <th
-                  class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Date
-                </th>
-                <th
-                  class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Jobs Done
-                </th>
-                <th
-                  class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Phone
-                </th>
-                <th
-                  class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Part Details
-                </th>
-                <th
-                  class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Cost
-                </th>
-                <th
-                  class="h-10 px-4 text-left text-xs font-semibold text-white uppercase tracking-wider"
-                >
-                  Vehicle
-                </th>
-                <th class="h-10 w-[48px]"></th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-
-        <div class="overflow-y-auto" style="height: calc(100% - 40px)">
-          <table class="w-full border-collapse table-fixed">
-            <colgroup>
-              <col style="width: 200px" />
-              <col style="width: 140px" />
-              <col style="width: auto" />
-              <col style="width: 140px" />
-              <col style="width: 180px" />
-              <col style="width: 140px" />
-              <col style="width: 180px" />
-              <col style="width: 48px" />
-            </colgroup>
-            <tbody>
-              <tr
-                v-for="i in 10"
-                :key="`skel-row-${i}`"
-                class="border-b border-border animate-pulse"
-              >
-                <td class="px-4 py-2">
-                  <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 flex-shrink-0"></div>
-                    <div
-                      class="h-3.5 bg-muted w-[70px]"
-                      style="border-radius: 3px"
-                    ></div>
-                  </div>
-                </td>
-                <td class="px-4 py-2">
-                  <div
-                    class="h-3.5 bg-muted w-[80px]"
-                    style="border-radius: 3px"
-                  ></div>
-                </td>
-                <td class="px-4 py-2">
-                  <div
-                    class="h-3.5 bg-muted w-[120px]"
-                    style="border-radius: 3px"
-                  ></div>
-                </td>
-                <td class="px-4 py-2">
-                  <div
-                    class="h-3.5 bg-muted w-[100px]"
-                    style="border-radius: 3px"
-                  ></div>
-                </td>
-                <td class="px-4 py-2">
-                  <div class="flex flex-wrap gap-1">
-                    <div
-                      class="h-5 bg-muted w-[70px]"
-                      style="border-radius: 3px"
-                    ></div>
-                    <div
-                      class="h-5 bg-muted w-[60px]"
-                      style="border-radius: 3px"
-                    ></div>
-                  </div>
-                </td>
-                <td class="px-4 py-2">
-                  <div
-                    class="h-4 bg-muted w-[80px]"
-                    style="border-radius: 3px"
-                  ></div>
-                </td>
-                <td class="px-4 py-2">
-                  <div
-                    class="h-3.5 bg-muted w-[90px]"
-                    style="border-radius: 3px"
-                  ></div>
-                </td>
-                <td class="px-2 py-2">
-                  <div class="p-1.5">
-                    <div
-                      class="h-[18px] bg-muted w-[18px] mx-auto"
-                      style="border-radius: 3px"
-                    ></div>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DesktopTableSkeleton />
     </template>
 
     <!-- EMPTY STATE -->
@@ -634,15 +223,13 @@
 import ServiceForm from "../components/ServiceForm.vue";
 import ViewDetailsModal from "../components/ViewDetailsModal.vue";
 import ToastNotification from "../components/ToastNotification.vue";
-import SearchBar from "@/components/common/inputs/SearchBar.vue";
 import EmptyState from "@/components/common/feedback/EmptyState.vue";
 import MobileRecordList from "@/components/features/sales/mobile/MobileRecordList.vue";
 import DesktopTable from "@/components/features/sales/desktop/DesktopTable.vue";
-import { ref, computed, onMounted, onUnmounted} from "vue";
-import {
-  getMonthName,
-  months,
-} from "@/utils/formatters.js";
+import MobileCardSkeleton from "@/components/skeletons/MobileCardSkeleton.vue";
+import DesktopTableSkeleton from "@/components/skeletons/DesktopTableSkeleton.vue";
+import FilterToolbar from "@/components/common/filtering/FilterToolbar.vue";
+import { ref, computed, onMounted } from "vue";
 import { useServiceFilter } from "@/composables/useServiceFilter";
 import { useToast } from "@/composables/useToast";
 import { useDeleteConfirmation } from "@/composables/useDeleteConfirmation";
@@ -668,6 +255,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { mockDatabase } from "../data/mockData.js";
+
 const props = defineProps({
   isSidebarCollapsed: {
     type: Boolean,
@@ -679,11 +267,7 @@ const props = defineProps({
 const {
   selectedMonth,
   selectedYear,
-  showMonthDropdown,
-  showYearDropdown,
   searchQuery,
-  toggleMonthDropdown,
-  toggleYearDropdown,
   currentPage,
   filteredServices,
   selectMonth,
@@ -714,8 +298,7 @@ const showViewModal = ref(false);
 const selectedService = ref(null);
 const viewService = ref(null);
 const error = ref(null);
-const monthDropdownRef = ref(null);
-const yearDropdownRef = ref(null);
+
 const totalPages = computed(() =>
   Math.ceil(filteredServices.value.length / ITEMS_PER_PAGE),
 );
@@ -734,11 +317,6 @@ onMounted(() => {
   setTimeout(() => {
     initialLoading.value = false;
   }, 300);
-  document.addEventListener("click", handleClickOutside);
-});
-
-onUnmounted(() => {
-  document.removeEventListener("click", handleClickOutside);
 });
 
 function openAddModal() {
@@ -810,18 +388,5 @@ async function handleSave(serviceData) {
   }
 
   closeModal();
-}
-
-function handleClickOutside(event) {
-
-  if (
-    monthDropdownRef.value &&
-    !monthDropdownRef.value.contains(event.target)
-  ) {
-    showMonthDropdown.value = false;
-  }
-  if (yearDropdownRef.value && !yearDropdownRef.value.contains(event.target)) {
-    showYearDropdown.value = false;
-  }
 }
 </script>
